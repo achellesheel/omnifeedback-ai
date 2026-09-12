@@ -344,6 +344,31 @@
     <p>The null channel result reflects the generator's independent metadata assignment, not evidence that
     channel is generally uninformative — a distinction worth stating plainly rather than treating a
     synthetic design choice as a finding about the world.</p>
+    <h3>7.4 Deployment under CPU-only, memory-constrained hosting</h3>
+    <p>Two incidents surfaced only under real hosted deployment, not local testing. First, a memory-ceiling
+    crash ("gone over its resource limits") traced — via HuggingFace's file-metadata API rather than
+    inference — to three transformer models resident simultaneously (bert-large-cased-conll03, 1.33GB;
+    bart-large-cnn, 1.63GB; the V3 DistilBERT backbone), ≈2.96GB combined with no GPU. Resolved by
+    substituting smaller same-task models (bert-base-NER, 433MB; distilbart-cnn-12-6, 1.22GB), reducing
+    the combined NER+summarization footprint to ≈1.66GB, with output quality re-verified at both single-record
+    and full production-batch scale before the smaller models were accepted as a replacement, not merely
+    assumed equivalent from parameter count alone. Second, a CPU-throttling event followed under sustained
+    inference load — an expected consequence of running four transformer-scale models on a free CPU-only
+    tier rather than a defect in the code; documented as a hosting-tier constraint rather than papered over
+    with a workaround that does not exist at this service tier.</p>
+    <h3>7.5 A summarization architecture mismatch</h3>
+    <p>Batch executive summaries produced by the BART/DistilBART pipeline (§3, §6.6's summarizer) were
+    reported as reading close to extractive on this corpus — reusing ticket phrasing nearly verbatim rather
+    than synthesizing cross-ticket themes. This is consistent with BART's pretraining regime (span
+    corruption and reconstruction over long-form CNN/DailyMail news prose): on short, already-terse,
+    keyword-dense complaint sentences, there is comparatively little redundant prose to compress, so the
+    model's salient-span selection surfaces directly as near-verbatim reuse. No parameter-count variant
+    within the BART family addresses this, since the behavior follows from the pretraining objective and
+    input register, not model capacity. We extended the existing pluggable-backend pattern used for the
+    resolution copilot (§3): an instruction-following LLM (Claude), given an explicit synthesis-oriented
+    system prompt directing it to name recurring themes rather than reuse ticket sentences, drafts the
+    brief when an API key is configured; the BART pipeline remains the zero-configuration fallback,
+    labeled in the interface as more extractive on this register rather than presented as equivalent.</p>
 
     <h2><span class="num">8</span>Limitations</h2>
     <p>§6.6 validates V3's separation on real Yelp/Sentiment140 text, but only for the binary
@@ -352,13 +377,28 @@
     is rule-based, not learned, and untested here against its optional Claude-backed path. V3 corrects the
     urgency regressor only; the TF-IDF-based clustering and baseline classifiers retain the same
     closed-vocabulary property that motivated Section 6 and have not yet received an equivalent
-    correction or external validation.</p>
+    correction or external validation. The NER component (§3, §7.4) is trained on the CoNLL-2003 tag
+    scheme, which defines exactly four entity types (PER/ORG/LOC/MISC) with no dedicated product or
+    software-version category; product mentions ("iPhone 15", "iOS 17.2") are consequently tagged MISC by
+    construction rather than by model error, a limitation shared by essentially all CoNLL-trained NER
+    models regardless of parameter count. An OntoNotes-trained alternative would add a PRODUCT tag, but
+    the small candidates checked were not reliably available and the one confirmed-available option is a
+    ~1.7GB Flair model — larger than this system's entire current NER+summarization footprint (§7.4) and
+    not adopted for that reason; this is reported as a considered trade-off rather than an oversight. The
+    Claude-backed summarization path in §7.5 was verified only for control flow and output shape (backend
+    selection, schema conformance) via a substituted response, not for the actual synthesis quality of live
+    model output, since no API credential was available in this evaluation environment — a claim of
+    improved semantic quality for that path specifically therefore awaits end-to-end verification with a
+    live key.</p>
 
     <h2><span class="num">9</span>Conclusion</h2>
-    <p>We documented two sequential diagnostic cycles — suspicious metrics traced to a data-construction
-    artifact, and a live-deployment failure traced to a closed-vocabulary generalization gap — each
-    resolved with a verifiable, measured fix inside a system where all three configurations stay live
-    specifically so every table and figure here is reproducible, not asserted.</p>
+    <p>We documented several sequential diagnostic cycles — suspicious metrics traced to a
+    data-construction artifact, a live-deployment failure traced to a closed-vocabulary generalization
+    gap, resource-constrained hosting failures traced to measured model memory footprints rather than
+    assumed ones, and a summarization-quality complaint traced to a mismatch between pretraining objective
+    and input register — each resolved (or, where a measured trade-off argued against a fix, explicitly
+    documented as such) with a verifiable, measured basis inside a system where all three model
+    configurations stay live specifically so every table and figure here is reproducible, not asserted.</p>
   </div>
 
   <h2 style="margin-top:24px;">References</h2>

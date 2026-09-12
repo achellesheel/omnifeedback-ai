@@ -521,7 +521,7 @@
       <h2 class="slide-title">Entity extraction &amp; executive summarization</h2>
       <div class="grid-2">
         <div class="card" style="padding:16px;">
-          <span class="dim" style="font-size:12px;">BERT NER — dbmdz/bert-large-cased-finetuned-conll03-english</span>
+          <span class="dim" style="font-size:12px;">BERT NER — dslim/bert-base-NER (433MB, swapped down from bert-large for memory)</span>
           <p style="font-size:13.5px; margin:10px 0;">"The iPhone 15 crashed after the iOS 17.2 update, and Apple support in California hasn't responded."</p>
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             <span class="pill accent">iPhone 15 · MISC · .99</span>
@@ -529,12 +529,20 @@
             <span class="pill accent">Apple · ORG · .99</span>
             <span class="pill accent">California · LOC · .99</span>
           </div>
+          <div class="callout" style="margin-top:10px; font-size:12.5px;">Why MISC? CoNLL-2003 (the training scheme
+            behind this model, and every small CoNLL-trained NER model) has only 4 tags — PER/ORG/LOC/MISC — with no
+            PRODUCT tag, so product/software names fall into the catch-all by design. Checked OntoNotes alternatives
+            with a PRODUCT tag: the small ones weren't reliably available, the reliable one is ~1.7GB. Not worth the
+            memory regression — documented as a known scheme limitation instead. See PROGRESS.md Milestone 16.</div>
         </div>
         <div class="card" style="padding:16px;">
-          <span class="dim" style="font-size:12px;">BART — facebook/bart-large-cnn</span>
+          <span class="dim" style="font-size:12px;">DistilBART — sshleifer/distilbart-cnn-12-6 (fallback) · Claude (synthesis)</span>
           <p style="font-size:13.5px; margin-top:10px;">5 distinct crisis reports (crash, billing, shipping, outage, latency)
-          condensed to one coherent executive brief in ~5s (cached weights).</p>
-          <div class="callout good" style="margin-top:10px; font-size:13px;">Live-tested, not just imported — see PROGRESS.md Milestone 2.</div>
+          condensed to one brief in ~5s (cached weights).</p>
+          <div class="callout" style="margin-top:10px; font-size:12.5px;">BART-family models are span-compression
+            models trained on news prose — on short, keyword-dense tickets they read as near-verbatim extraction,
+            not real synthesis. Added a pluggable Claude backend with a synthesis-oriented prompt for genuine
+            cross-ticket theming, honestly labeled per-summary which backend produced it. See PROGRESS.md Milestone 15.</div>
         </div>
       </div>
     </div>
@@ -645,9 +653,34 @@
 
   <!-- 21 -->
   <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Production Incidents</div>
+      <h2 class="slide-title">Free-tier hosting found two real limits, not two hypothetical ones</h2>
+      <table>
+        <thead><tr><th>Incident</th><th>Root cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>"Gone over its resource limits" (crash)</td><td>4 transformer models loaded at once
+            (bert-large-NER 1.33GB + bart-large-cnn 1.63GB + DistilBERT V3) ≈ 2.96GB, measured via the
+            HuggingFace file-metadata API, not guessed</td><td><span class="pill good">Fixed</span> — swapped
+            to bert-base-NER + distilbart-cnn-12-6, cutting the combined footprint to 1.66GB, verified
+            output quality held at both toy and production batch scale</td></tr>
+          <tr><td>"Your app has been throttled" (CPU)</td><td>Streamlit Community Cloud's free-tier CPU cap
+            under sustained transformer inference load, with no GPU</td><td><span class="pill accent">Documented,
+            not code-fixed</span> — expected behavior at this hosting tier; the real fix is a paid inference
+            endpoint (see Enhancement Roadmap)</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:10px;">Both diagnosed from real Streamlit Cloud logs and screenshots,
+        not assumption — the memory fix was verified against measured model file sizes before any code changed.
+        See PROGRESS.md Milestone 14.</div>
+    </div>
+  </section>
+
+  <!-- 22 -->
+  <section class="slide">
     <div class="slide-inner" style="text-align:center;">
       <div class="eyebrow" style="justify-content:center;">Closing</div>
-      <h2 class="slide-title">Built, tested, deployed — two real bugs found and fixed, not edited out</h2>
+      <h2 class="slide-title">Built, tested, deployed — every real bug found in production, fixed or honestly documented</h2>
       <p class="lead" style="margin:0 auto 22px; text-align:center;">31 passing tests · V1→V2→V3 model evolution, live and toggleable ·
         live Streamlit deployment · Dockerfile verified · full build log in PROGRESS.md · data insights,
         product review, and roadmap in /docs.</p>
