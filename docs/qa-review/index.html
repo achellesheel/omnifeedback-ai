@@ -125,8 +125,13 @@
       <tr><td>V2's from-scratch 196-word vocabulary scored real critical/positive feedback almost identically — found by a person testing the live app, not by any test</td><td><span class="pill sev-high">High</span></td><td><span class="pill good">Fixed (V3)</span></td></tr>
       <tr><td>V3's initial checkpoint (265MB) exceeded GitHub's 100MB per-file limit</td><td><span class="pill sev-med">Medium</span></td><td><span class="pill good">Fixed</span></td></tr>
       <tr><td>V3's CRITICAL threshold (≥0.8) only reliably triggers on two narrow patterns (data loss, account compromise) — a severe outage complaint alone tops out at HIGH</td><td><span class="pill sev-med">Medium</span></td><td><span class="pill accent">Open (by design, stated plainly)</span></td></tr>
+      <tr><td>V3's fix was only validated on 8 hand-written sentences — could plausibly be an artifact of curated text</td><td><span class="pill sev-high">High</span></td><td><span class="pill good">Validated on real data</span></td></tr>
     </tbody>
   </table>
+  <p class="dim" style="font-size:13px; margin-top:10px;">Real-data validation (150 examples/class, Yelp reviews + Sentiment140 tweets, proxy labels): V3's
+    separation is statistically significant on both (p&lt;0.0001), at roughly half the hand-written magnitude
+    (0.08–0.13 vs. 0.30) — the fix replicates, honestly reported at its real, smaller effect size. See
+    <a href="https://github.com/achellesheel/omnifeedback-ai/blob/main/docs/DATA_INSIGHTS.md">Data Insights §7</a> for the full breakdown.</p>
 
   <h2>3. Business value, honestly framed</h2>
   <div class="value-grid">

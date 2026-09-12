@@ -18,11 +18,12 @@ Ideas ranked by cost/effort vs. impact, grounded in the specific gaps found in `
    recall live instead of the app hard-coding 0.5.
 4. **PDF/HTML export of the Executive Overview** (`PRODUCT_REVIEW.md` #7) — Streamlit can render a page
    to static HTML via `st.download_button` + a Plotly `fig.to_html()` bundle; no new dependency needed.
-5. **Real-dataset validation pass**: run the already-fetched Yelp/Sentiment140 samples
-   (`scripts/fetch_real_datasets.py`) through the same pipeline as a third "variant" alongside V1/V2, to
-   show the model's behavior on genuinely unstructured human text, not just synthetic templates. This is
-   the single highest-value free addition for the eventual research paper — it's the missing "does this
-   generalize past synthetic data" evidence.
+5. ~~**Real-dataset validation pass**~~ — **done** (2026-09-13, PROGRESS.md Milestone 10): ran V2 and V3
+   against 150 examples/class of real Yelp reviews and Sentiment140 tweets. V3's separation replicated,
+   significantly, on both (p&lt;0.0001), at roughly half the hand-written stress test's magnitude — the
+   fix holds up, honestly reported at its real effect size. Now live on the app's Model Comparison page
+   and in `docs/DATA_INSIGHTS.md` §7. Natural follow-up: extend the same real-data validation to the
+   TF-IDF-based clustering/classifiers (item below), which haven't received it yet.
 
 ## Paid APIs (cheap tier, high leverage)
 

@@ -150,6 +150,66 @@ else:
     )
 
 st.divider()
+st.header("🌍 Real-World Validation: Yelp Reviews &amp; Sentiment140")
+st.caption(
+    "The stress test above used 8 sentences written by hand — a fair question is whether that was "
+    "'easy mode.' This section replays the same measurement on real, independently-authored text: "
+    "1-star vs. 5-star Yelp reviews, and negative vs. positive Sentiment140 tweets, 150 examples per "
+    "group per dataset. Neither dataset has a native 'urgency' label — star rating and sentiment are "
+    "used as proxies, the same way a 1-star review reads like a severe complaint."
+)
+
+real_val_path = Path(__file__).resolve().parent.parent / "models" / "real_data_validation.json"
+if not real_val_path.exists():
+    st.info("Run `python scripts/fetch_real_datasets.py` then `python scripts/validate_real_data.py` "
+            "to generate this section.")
+else:
+    with open(real_val_path) as f:
+        real_val = json.load(f)
+
+    rv_cols = st.columns(2)
+    for col, key in zip(rv_cols, ["yelp", "sentiment140"]):
+        rv = real_val[key]
+        with col:
+            st.markdown(f"**{rv['dataset']}** (n={rv['n_per_class']}/class)")
+            fig_rv = go.Figure()
+            fig_rv.add_trace(go.Bar(
+                x=["V2 separation", "V3 separation"],
+                y=[rv["v2_separation"], rv["v3_separation"]],
+                marker_color=["crimson", "seagreen"],
+            ))
+            fig_rv.update_layout(yaxis_title="Critical − low mean urgency score", showlegend=False, height=320)
+            st.plotly_chart(fig_rv, use_container_width=True)
+            def fmt_p(p):
+                return "p<0.0001" if p < 0.0001 else f"p={p}"
+            st.caption(
+                f"V2: separation={rv['v2_separation']} (Mann-Whitney {fmt_p(rv['v2_mannwhitney_p'])}) · "
+                f"V3: separation={rv['v3_separation']} ({fmt_p(rv['v3_mannwhitney_p'])})"
+            )
+
+    if "v2_spearman_vs_5class_rating" in real_val["yelp"]:
+        y = real_val["yelp"]
+        def fmt_p2(p):
+            return "p<0.0001" if p < 0.0001 else f"p={p}"
+        st.markdown(
+            f"**Granular check (Yelp's full 5-star scale, not just the two extremes):** V2's urgency score "
+            f"correlates with true review sentiment at ρ={y['v2_spearman_vs_5class_rating']['rho']} "
+            f"({fmt_p2(y['v2_spearman_vs_5class_rating']['p'])} — not significant). V3: "
+            f"ρ={y['v3_spearman_vs_5class_rating']['rho']} ({fmt_p2(y['v3_spearman_vs_5class_rating']['p'])})."
+        )
+
+    st.warning(
+        "⚠️ **Honest read**: V3's real-world separation (Yelp 0.13, Sentiment140 0.08) is real and "
+        "statistically significant on both datasets (p<0.0001) — but smaller than the hand-written stress "
+        "test's 0.30. Real reviews are noisier than curated examples; the effect size there was inflated "
+        "by writing unambiguous text on purpose. A more nuanced finding: V2's tiny separation is actually "
+        "*statistically significant on Yelp* (p=0.0048, longer text = more signal even with a limited "
+        "vocabulary) but *indistinguishable from noise on short tweets* (p=0.39) — the vocabulary problem "
+        "bites hardest on short text, where there's less of it to work with. Both effects are real and "
+        "neither is hidden here."
+    )
+
+st.divider()
 with st.expander("📖 The full story: what we changed and why (from PROGRESS.md)"):
     st.markdown(
         """

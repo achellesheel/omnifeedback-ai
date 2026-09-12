@@ -1,0 +1,36 @@
+{
+  "yelp": {
+    "dataset": "Yelp Review Full",
+    "n_per_class": 150,
+    "v2_critical_mean": 0.4438,
+    "v2_low_mean": 0.4189,
+    "v2_separation": 0.0249,
+    "v2_mannwhitney_p": 0.004803,
+    "v3_critical_mean": 0.5486,
+    "v3_low_mean": 0.4214,
+    "v3_separation": 0.1272,
+    "v3_mannwhitney_p": 0.0,
+    "v2_spearman_vs_5class_rating": {
+      "rho": 0.0731,
+      "p": 0.144533,
+      "n": 400
+    },
+    "v3_spearman_vs_5class_rating": {
+      "rho": 0.6816,
+      "p": 0.0,
+      "n": 400
+    }
+  },
+  "sentiment140": {
+    "dataset": "Sentiment140",
+    "n_per_class": 150,
+    "v2_critical_mean": 0.4241,
+    "v2_low_mean": 0.4192,
+    "v2_separation": 0.005,
+    "v2_mannwhitney_p": 0.391448,
+    "v3_critical_mean": 0.5337,
+    "v3_low_mean": 0.45,
+    "v3_separation": 0.0837,
+    "v3_mannwhitney_p": 0.0
+  }
+}

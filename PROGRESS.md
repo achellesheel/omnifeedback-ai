@@ -419,3 +419,48 @@ Moved past the core build into the analysis/presentation phase requested next.
 **Verification performed**: `pytest tests/ -v` still 25/25 passing (no source code changed, only new
 analysis scripts/docs); `data_insights.py` output manually sanity-checked against `training_summary.json`
 before writing any of the markdown docs, so every number quoted is traceable to an actual run.
+
+## 2026-09-13 — Milestone 10: Real-data validation — V3's fix replicates outside the lab
+
+**Why**: every V2-vs-V3 number in Milestone 8/9 came from 8 sentences I wrote myself. Even reported
+honestly, that's a real scientific weakness — a skeptical reader can reasonably ask "did you just write
+examples that make your fix look good?" Real, independently-authored text is the actual test.
+
+**Method** (`scripts/validate_real_data.py`): fetched 5,000 Yelp Review Full rows and 5,000 Sentiment140
+rows (`scripts/fetch_real_datasets.py`). Neither dataset has a native "urgency" label, so used the natural
+proxy: Yelp 1-star reviews / Sentiment140 negative tweets as proxy-critical, Yelp 5-star / Sentiment140
+positive as proxy-low. Sampled 150 per class per dataset, scored all of them with both V2 and V3, and
+reused the exact "critical-minus-low mean score separation" metric from the hand-written stress test —
+same methodology, real text, ~19x more examples per group than the original 4.
+
+**Results**:
+
+| | Yelp (n=150/class) | Sentiment140 (n=150/class) |
+|---|---|---|
+| V2 separation | 0.0249 (Mann-Whitney p=0.0048 — significant, but tiny) | 0.0050 (p=0.39 — **not significant**) |
+| V3 separation | 0.1272 (p<0.0001) | 0.0837 (p<0.0001) |
+| V2 vs. 5-class star rating | Spearman ρ=0.073 (p=0.14 — not significant) | — |
+| V3 vs. 5-class star rating | Spearman ρ=0.682 (p<0.0001) | — |
+
+**Honest read, stated plainly rather than rounded up**: V3's separation replicates on independent real
+text and is statistically significant on both datasets — the core finding holds. But the *effect size* on
+real data (0.08–0.13) is meaningfully smaller than the hand-written stress test's 0.30 — real reviews are
+noisier and more mixed than text written to be unambiguous, and that gap is worth reporting rather than
+letting the bigger, cleaner number stand unchallenged.
+
+A genuinely interesting secondary finding: V2's separation is *not uniformly useless* — on Yelp (longer
+reviews), it's small but statistically real (p=0.0048); on Sentiment140 (short tweets), it's statistically
+indistinguishable from noise (p=0.39). Consistent with the Milestone 8 root cause: shorter text gives a
+196-word vocabulary proportionally less to work with, so the failure is worse on tweets than on full
+reviews. V3's Spearman correlation against Yelp's full 5-class rating (ρ=0.682, p<0.0001) is the strongest
+single piece of evidence in the project that V3 tracks real sentiment — V2's equivalent (ρ=0.073, not
+significant) shows essentially no real predictive relationship across the full ordinal scale.
+
+**App integration**: added a "Real-World Validation" section to `pages/0_Model_Comparison.py` — two bar
+charts (Yelp, Sentiment140) with Mann-Whitney p-values, the Spearman granular check, and the honest-read
+callout above, so a viewer sees the nuance rather than a single flattering number.
+
+**Verification performed**: `pytest tests/ -v` — 31/31 passing; a dedicated smoke-test agent confirmed the
+new page section's exact data path (JSON loading, field access, p-value formatting) runs without
+exceptions against the real `models/real_data_validation.json`, and that the live Streamlit server boots
+cleanly with the new section.

@@ -106,10 +106,37 @@ Both map closely to a specific template family in V2's hardened training data ("
 all my data without warning, I need this fixed NOW."). This is expected behavior for a model calibrated
 to its training distribution, not a bug — but it means the 0.8 cutoff should be read as "matches the
 data-loss/account-compromise pattern strongly," not "the model agrees this is maximally severe." Training
-on genuinely diverse real complaint text (the Yelp/Sentiment140 samples already fetched in
-`scripts/fetch_real_datasets.py`, not yet used for training) would likely broaden what reaches CRITICAL.
+on genuinely diverse real complaint text would likely broaden what reaches CRITICAL (see §7 — validated,
+not yet trained on).
 
-## 7. What this means for the product
+## 7. Real-data validation: does the V3 fix replicate outside the lab?
+
+Section 6's 0.30 separation came from 8 sentences written by hand — a fair challenge is whether that's
+"easy mode." `scripts/validate_real_data.py` reruns the same measurement on real, independently-authored
+text: 150 Yelp 1-star vs. 150 5-star reviews (proxy-critical/proxy-low), and the same split on 150+150
+Sentiment140 tweets.
+
+| | Yelp (n=150/class) | Sentiment140 (n=150/class) |
+|---|---|---|
+| V2 separation | 0.0249 (p=0.0048 — significant, tiny) | 0.0050 (p=0.39 — **not significant**) |
+| V3 separation | 0.1272 (p<0.0001) | 0.0837 (p<0.0001) |
+| V2 vs. full 5-star scale | Spearman ρ=0.073 (p=0.14, not significant) | — |
+| V3 vs. full 5-star scale | Spearman ρ=0.682 (p<0.0001) | — |
+
+**The core finding replicates**: V3's separation is real and statistically significant on independent
+data the model never trained on, on both a review dataset and a social-media dataset. **The honest
+correction**: the effect size (0.08–0.13) is meaningfully smaller than the hand-written stress test's
+0.30 — real text is noisier than examples written to be unambiguous, and reporting the smaller, real
+number matters more than repeating the bigger, curated one.
+
+**A genuinely useful secondary finding**: V2 isn't uniformly blind — its separation is small but
+statistically real on Yelp's longer reviews (p=0.0048), and statistically indistinguishable from noise on
+Sentiment140's short tweets (p=0.39). This matches the §6 root cause exactly: shorter text leaves a
+196-word vocabulary proportionally less to work with, so the failure is worse on tweets than full reviews.
+V3's Spearman correlation against Yelp's complete 5-star scale (ρ=0.682) versus V2's (ρ=0.073, not
+significant) is the single strongest piece of evidence in this project that V3 tracks real sentiment.
+
+## 8. What this means for the product
 
 - The 0.5 threshold is a reasonable default; no urgent need to recalibrate before a pilot deployment.
 - Expect roughly **1 in 4 critical alerts to be a false alarm** and **roughly 1 in 5 real crises to be
