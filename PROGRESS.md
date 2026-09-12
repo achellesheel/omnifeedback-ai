@@ -241,6 +241,36 @@ reason to prefer container deployment for anything beyond a quick demo.
 **Resolved**: confirmed working after setting Python 3.11 explicitly via Streamlit Cloud's Advanced
 Settings. Live app: https://omnifeedback-ai-c4mmclqnkgytms6vuzqtjp.streamlit.app/
 
+## 2026-09-13 — Milestone 7: "Risk Level: :yellow" bug — found by a real user, not by testing
+
+**Found by**: a friend testing the live app for feedback, not by any automated check. Every MEDIUM-risk
+result on the Inference Playground and GenAI Copilot pages rendered as the literal broken text
+`Risk Level: :yellow` instead of colored "MEDIUM" text — for every single test case they tried.
+
+**Root cause**: Streamlit's `:color[text]` markdown color-annotation syntax only recognizes a fixed
+keyword set — confirmed directly from Streamlit's own source docstring:
+`supported colors: blue, green, orange, red, violet, gray/grey, rainbow`. `"yellow"` was never a valid
+keyword. When Streamlit hits an unrecognized color name inside `:color[...]`, it doesn't raise an error
+or fall back to plain text — it fails to parse the whole construct, which is why the bracketed level text
+disappeared entirely rather than showing as plain unstyled text.
+
+**Why pytest didn't catch it**: this class of bug — a markdown string that parses fine as a Python
+f-string but fails Streamlit's own internal color-keyword validation — is invisible to unit tests that
+only check Python-level correctness. It required actually looking at the rendered page, which is exactly
+why "show it to a real person" surfaced it and 27 passing tests didn't.
+
+**Fix**: extracted the risk-level → color mapping (previously duplicated independently in both
+`pages/1_Inference_Playground.py` and `pages/3_GenAI_Copilot.py` — itself part of the problem, since a
+fix to one copy wouldn't have caught the other) into a single `src/ui_colors.py` constant, changed
+`MEDIUM`'s color from `"yellow"` to `"violet"`, and added `tests/test_ui_colors.py` asserting every
+mapped color is in Streamlit's actual supported set — so a future edit that reintroduces an invalid color
+name fails the test suite immediately instead of waiting for another live demo to catch it.
+
+**Verification performed**: confirmed Streamlit's valid-color list directly from its installed source
+(`streamlit/elements/markdown.py`'s own docstring) rather than trusting memory; `pytest tests/ -v` — 27/27
+passing; manually re-generated the exact markdown strings Streamlit will now render for all four risk
+levels and confirmed each uses a color Streamlit actually supports.
+
 ## 2026-09-13 — Milestone 6: Data insights, QA/PM review, roadmap, and a 15-slide deck (Steps 6–9)
 
 Moved past the core build into the analysis/presentation phase requested next.

@@ -10,6 +10,7 @@ from src.app_state import select_variant
 from src.dl_lstm import load_bilstm_model, predict_urgency
 from src.genai_copilot import generate_resolution
 from src.ingestor import TextIngestor
+from src.ui_colors import RISK_LEVEL_COLORS
 
 st.set_page_config(page_title="GenAI Copilot", page_icon="🤖", layout="wide")
 st.title("🤖 GenAI Resolution Copilot")
@@ -48,8 +49,7 @@ if st.button("Generate Resolution", type="primary"):
     backend_label = "🔮 Claude API" if result["_backend"] == "claude" else "⚙️ Local rule-based (no API key configured)"
     st.caption(f"Backend used: {backend_label} · Urgency score: {urgency_score:.3f}")
 
-    risk_colors = {"CRITICAL": "red", "HIGH": "orange", "MEDIUM": "yellow", "LOW": "green"}
-    st.markdown(f"### Risk Level: :{risk_colors.get(result['risk_level'], 'blue')}[{result['risk_level']}]")
+    st.markdown(f"### Risk Level: :{RISK_LEVEL_COLORS.get(result['risk_level'], 'blue')}[{result['risk_level']}]")
 
     with st.expander("💭 Chain-of-Thought reasoning", expanded=True):
         st.write(result["thought_process"])

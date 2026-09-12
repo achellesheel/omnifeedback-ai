@@ -9,6 +9,7 @@ import streamlit as st
 from src.app_state import select_variant
 from src.dl_lstm import load_bilstm_model, predict_urgency
 from src.ingestor import TextIngestor
+from src.ui_colors import RISK_LEVEL_COLORS
 
 st.set_page_config(page_title="Inference Playground", page_icon="⚡", layout="wide")
 st.title("⚡ Real-Time Escalation Playground")
@@ -41,13 +42,14 @@ if st.button("Score Urgency", type="primary"):
     score = predict_urgency(model, vocab, cleaned, device)
 
     if score >= 0.8:
-        level, color = "CRITICAL", "red"
+        level = "CRITICAL"
     elif score >= 0.5:
-        level, color = "HIGH", "orange"
+        level = "HIGH"
     elif score >= 0.3:
-        level, color = "MEDIUM", "yellow"
+        level = "MEDIUM"
     else:
-        level, color = "LOW", "green"
+        level = "LOW"
+    color = RISK_LEVEL_COLORS[level]
 
     col1, col2 = st.columns(2)
     col1.metric("Urgency Score", f"{score:.3f}")
