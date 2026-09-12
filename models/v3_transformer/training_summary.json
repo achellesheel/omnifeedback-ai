@@ -1,0 +1,72 @@
+{
+  "variant_id": "v3_transformer",
+  "base_model": "distilbert-base-uncased",
+  "n_records": 4000,
+  "stopped_epoch": 7,
+  "best_val_mse": 0.019117631918848736,
+  "test_mse": 0.015991246321630712,
+  "test_f1": 0.8250326145345714,
+  "trainable_param_fraction": 0.21361864836576422,
+  "history": {
+    "train_loss": [
+      0.028275737735841956,
+      0.019599934658035636,
+      0.018871936804748007,
+      0.018836700040847063,
+      0.018607788711254087,
+      0.01873766319294061,
+      0.018506112771907023
+    ],
+    "val_loss": [
+      0.020465693130206904,
+      0.01949260891170094,
+      0.019852059409267417,
+      0.019117631918848736,
+      0.019520811810109177,
+      0.01955345772991055,
+      0.019247428612097314
+    ]
+  },
+  "stress_test_results": [
+    {
+      "expected": "CRITICAL",
+      "text": "Our production checkout API has been down for 45 minutes and we're losing real revenue every minute \u2014 nobody from support has called us back.",
+      "v3_score": 0.6262
+    },
+    {
+      "expected": "CRITICAL",
+      "text": "I was charged three times for the same subscription this month and your chatbot keeps looping me back to the same FAQ page.",
+      "v3_score": 0.5967
+    },
+    {
+      "expected": "CRITICAL",
+      "text": "The mobile app crashes every single time I try to check out, on three different phones. I've already switched to a competitor.",
+      "v3_score": 0.5629
+    },
+    {
+      "expected": "LOW",
+      "text": "Just wanted to say the redesigned onboarding flow is fantastic \u2014 set up my whole team in under 10 minutes.",
+      "v3_score": 0.2706
+    },
+    {
+      "expected": "LOW",
+      "text": "Support resolved my billing question in one chat message. Really impressed.",
+      "v3_score": 0.3231
+    },
+    {
+      "expected": "AMBIGUOUS",
+      "text": "Loved the new UI, but it logged me out twice today for no reason.",
+      "v3_score": 0.548
+    },
+    {
+      "expected": "AMBIGUOUS",
+      "text": "Mostly happy with the service, though the search feature has been a bit flaky since the update.",
+      "v3_score": 0.5373
+    },
+    {
+      "expected": "AMBIGUOUS",
+      "text": "Shipping has been slower than promised \u2014 order placed 9 days ago, tracking hasn't updated in 4 days.",
+      "v3_score": 0.6007
+    }
+  ]
+}

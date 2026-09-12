@@ -271,6 +271,78 @@ name fails the test suite immediately instead of waiting for another live demo t
 passing; manually re-generated the exact markdown strings Streamlit will now render for all four risk
 levels and confirmed each uses a color Streamlit actually supports.
 
+## 2026-09-13 — Milestone 8: V3 — a real generalization failure, found live, fixed with transfer learning
+
+**What happened**: while testing the app to prepare it for showing to friends/customers, a set of
+genuinely natural example sentences (not phrased like the synthetic training templates) all came back
+as MEDIUM risk regardless of actual severity — including sentences that were obviously critical
+("the mobile app crashes every single time... I've already switched to a competitor") and obviously
+positive ("the redesigned onboarding flow is fantastic"). This was **not** the color-rendering bug from
+earlier the same day; it was the underlying urgency *score* itself failing to discriminate.
+
+**Root cause, confirmed by direct measurement, not guessed**: V2's BiLSTM (`src/dl_lstm.py`) learns its
+own embedding table from scratch, and its vocabulary — built only from words seen ≥2 times in the
+~2,800-row training split — is **196 words total**. Tokenizing the stress-test sentences against that
+vocabulary showed 33-63% of words mapping to `<UNK>`:
+
+| Sentence type | OOV rate | V2 score |
+|---|---|---|
+| Matches training templates ("App keeps crashing during checkout payment step...") | 0% | 0.815 |
+| Natural critical phrasing ("mobile app crashes every single time... switched to a competitor") | 55% | 0.393 |
+| Natural positive phrasing ("redesigned onboarding flow is fantastic") | 42% | 0.428 |
+
+With roughly half the words invisible to the model, V2 has almost no real signal to work with and its
+output collapses toward the training mean — **critical and positive text scored 0.02 apart on average**,
+regardless of true severity. This is a materially bigger problem than the "ambiguous boundary case"
+limitation already documented in `DATA_INSIGHTS.md` — it's a full generalization failure on ordinary
+human phrasing, not a hard edge case.
+
+**Fix — V3, a transfer-learned regressor** (`src/transformer_regressor.py`, `scripts/train_v3.py`):
+fine-tuned `distilbert-base-uncased` instead of training an embedding table from scratch. Froze the
+embeddings and the first 4 of 6 transformer layers; trained only the last 2 layers + a small regression
+head — **21.4% of parameters trainable**, deliberately mirroring the "fine-tune ~20% of a pretrained
+backbone" pattern from a prior image-classification project, applied here to text. Subword tokenization
+means there is no closed-vocabulary problem at all: any English word decomposes into known subword
+pieces, so the model carries genuine pretrained language understanding into a dataset of only 4,000 rows
+instead of having to learn English from those 4,000 rows.
+
+**Also fixed as part of this**: V2's aggressive regex cleaning (strips punctuation/casing) was built for
+a tiny from-scratch vocabulary where punctuation was just noise. A pretrained tokenizer benefits from
+real casing and punctuation as signal, so V3 trains on `raw_text` rather than V2's `cleaned_text` —
+different architectures warrant different preprocessing, not one cleaning pipeline for everything.
+
+**Results — same held-out synthetic test set** (comparable to V2, confirming V3 didn't regress on what
+V2 already did fine): test MSE 0.0160 (V2: 0.0162), test macro-F1 0.825 (V2: 0.821).
+
+**Results — the stress test that exposed the bug** (`scripts/stress_test_compare.py`, same 8 sentences,
+both models, side by side):
+
+| | V2 (BiLSTM) | V3 (DistilBERT) |
+|---|---|---|
+| Mean score, CRITICAL examples | 0.44 | 0.60 |
+| Mean score, LOW examples | 0.42 | 0.30 |
+| **Critical − Low separation** | **0.022** | **0.298** |
+
+V3's separation is **~13x larger** than V2's on text neither model was trained on verbatim — this is the
+number that matters, not the synthetic test-set metrics, since the synthetic test set was already
+in-distribution for both.
+
+**App integration**: added `v3_transformer` as a third variant in `src/variants.py` (shares V2's dataset/
+warehouse, has its own `model_dir`), a unified `src/urgency.py` dispatcher so `pages/1_Inference_Playground.py`
+and `pages/3_GenAI_Copilot.py` work with either backend without knowing which one a variant uses, and a
+new V2-vs-V3 section on the Model Comparison page with the real stress-test numbers above, visualized.
+V3 is now the app's default variant.
+
+**Verification performed**: `pytest tests/ -v` — 31/31 passing (added `tests/test_urgency_dispatch.py` and
+updated `tests/test_variants.py` for 3 variants); a dedicated smoke-test agent confirmed all 3 variants
+load correctly through the real dispatcher (not just standalone scripts), confirmed the exact critical/
+positive separation numbers above via the actual app code path, and confirmed the live Streamlit server
+still boots cleanly with no tracebacks after the page rewrites.
+
+**Honest scope note**: this fixes the urgency regressor specifically. The K-Means clustering and baseline
+classifiers still use TF-IDF (also vocabulary-limited in the same way) — flagged as the natural next
+target in `docs/ENHANCEMENTS.md`'s existing "OpenAI embeddings for semantic clustering" item, not yet done.
+
 ## 2026-09-13 — Milestone 6: Data insights, QA/PM review, roadmap, and a 15-slide deck (Steps 6–9)
 
 Moved past the core build into the analysis/presentation phase requested next.

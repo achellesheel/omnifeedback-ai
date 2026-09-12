@@ -7,10 +7,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import streamlit as st
 
 from src.app_state import select_variant
-from src.dl_lstm import load_bilstm_model, predict_urgency
 from src.genai_copilot import generate_resolution
 from src.ingestor import TextIngestor
 from src.ui_colors import RISK_LEVEL_COLORS
+from src.urgency import load_urgency_model, score_urgency
 
 st.set_page_config(page_title="GenAI Copilot", page_icon="🤖", layout="wide")
 st.title("🤖 GenAI Resolution Copilot")
@@ -24,8 +24,8 @@ st.info(f"Urgency scored with: **{variant['label']}**", icon="🔀")
 
 
 @st.cache_resource
-def get_model(model_dir):
-    return load_bilstm_model(model_dir=model_dir)
+def get_bundle(model_dir, model_type):
+    return load_urgency_model(variant)
 
 
 text = st.text_area(
@@ -36,12 +36,12 @@ text = st.text_area(
 
 if st.button("Generate Resolution", type="primary"):
     try:
-        model, vocab, device = get_model(variant["model_dir"])
+        bundle = get_bundle(variant["model_dir"], variant.get("model_type"))
         cleaned = TextIngestor.clean_text(text)
-        urgency_score = predict_urgency(model, vocab, cleaned, device)
+        urgency_score = score_urgency(bundle, text, cleaned_text=cleaned)
     except FileNotFoundError:
         urgency_score = 0.5
-        st.info("No trained BiLSTM found — using a neutral default urgency score of 0.5.")
+        st.info("No trained model found for this variant — using a neutral default urgency score of 0.5.")
 
     with st.spinner("Reasoning through root cause..."):
         result = generate_resolution(text, urgency_score)

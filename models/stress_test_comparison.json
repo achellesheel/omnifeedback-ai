@@ -1,0 +1,54 @@
+{
+  "stress_test_results": [
+    {
+      "expected": "CRITICAL",
+      "text": "Our production checkout API has been down for 45 minutes and we're losing real revenue every minute \u2014 nobody from support has called us back.",
+      "v2_score": 0.3926,
+      "v3_score": 0.6262
+    },
+    {
+      "expected": "CRITICAL",
+      "text": "I was charged three times for the same subscription this month and your chatbot keeps looping me back to the same FAQ page.",
+      "v2_score": 0.5284,
+      "v3_score": 0.5967
+    },
+    {
+      "expected": "CRITICAL",
+      "text": "The mobile app crashes every single time I try to check out, on three different phones. I've already switched to a competitor.",
+      "v2_score": 0.3934,
+      "v3_score": 0.5629
+    },
+    {
+      "expected": "LOW",
+      "text": "Just wanted to say the redesigned onboarding flow is fantastic \u2014 set up my whole team in under 10 minutes.",
+      "v2_score": 0.4284,
+      "v3_score": 0.2706
+    },
+    {
+      "expected": "LOW",
+      "text": "Support resolved my billing question in one chat message. Really impressed.",
+      "v2_score": 0.4031,
+      "v3_score": 0.3231
+    },
+    {
+      "expected": "AMBIGUOUS",
+      "text": "Loved the new UI, but it logged me out twice today for no reason.",
+      "v2_score": 0.3588,
+      "v3_score": 0.548
+    },
+    {
+      "expected": "AMBIGUOUS",
+      "text": "Mostly happy with the service, though the search feature has been a bit flaky since the update.",
+      "v2_score": 0.5542,
+      "v3_score": 0.5373
+    },
+    {
+      "expected": "AMBIGUOUS",
+      "text": "Shipping has been slower than promised \u2014 order placed 9 days ago, tracking hasn't updated in 4 days.",
+      "v2_score": 0.4742,
+      "v3_score": 0.6007
+    }
+  ],
+  "v2_critical_minus_low_gap": 0.0224,
+  "v3_critical_minus_low_gap": 0.2984
+}

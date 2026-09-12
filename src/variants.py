@@ -23,6 +23,7 @@ VARIANTS = {
         "raw_csv": ROOT / "data" / "raw" / "omnifeedback_v1_naive.csv",
         "db_path": ROOT / "data" / "warehouse" / "omnifeedback_v1_naive.db",
         "model_dir": ROOT / "models" / "v1_naive",
+        "model_type": "bilstm",
     },
     "v2_hardened": {
         "label": "V2 · Hardened (production)",
@@ -30,12 +31,28 @@ VARIANTS = {
         "description": (
             "Templated + randomized phrasing, deliberately ambiguous mixed-sentiment cases "
             "straddling the urgency threshold, and ~3% simulated label noise. Metrics are "
-            "lower but credible — this is the version the production system ships with."
+            "lower but credible — but its from-scratch 196-word vocabulary still fails on "
+            "real-world phrasing outside its training templates (see V3)."
         ),
         "raw_csv": ROOT / "data" / "raw" / "omnifeedback_v2_hardened.csv",
         "db_path": ROOT / "data" / "warehouse" / "omnifeedback_v2_hardened.db",
         "model_dir": ROOT / "models" / "v2_hardened",
+        "model_type": "bilstm",
+    },
+    "v3_transformer": {
+        "label": "V3 · Transfer-Learned (DistilBERT)",
+        "short_label": "V3 Transformer",
+        "description": (
+            "Same hardened dataset as V2, but the urgency regressor is now a fine-tuned "
+            "DistilBERT (frozen early layers, trainable last 2 layers + head) instead of a "
+            "from-scratch BiLSTM. Subword tokenization means no closed-vocabulary OOV problem "
+            "— it generalizes to real customer phrasing V2 couldn't handle."
+        ),
+        "raw_csv": ROOT / "data" / "raw" / "omnifeedback_v2_hardened.csv",
+        "db_path": ROOT / "data" / "warehouse" / "omnifeedback_v2_hardened.db",
+        "model_dir": ROOT / "models" / "v3_transformer",
+        "model_type": "transformer",
     },
 }
 
-DEFAULT_VARIANT = "v2_hardened"
+DEFAULT_VARIANT = "v3_transformer"

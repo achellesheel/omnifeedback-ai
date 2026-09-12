@@ -1,5 +1,6 @@
-"""V1 (naive) vs V2 (hardened) side-by-side comparison — the overfitting fix, made visible."""
+"""V1 vs V2 vs V3 side-by-side comparison — both fixes, made visible."""
 import json
+from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -8,11 +9,11 @@ import streamlit as st
 from src.variants import VARIANTS
 
 st.set_page_config(page_title="Model Comparison", page_icon="⚖️", layout="wide")
-st.title("⚖️ V1 (Naive) vs. V2 (Hardened): Same Pipeline, Different Data")
+st.title("⚖️ V1 → V2 → V3: Two Real Bugs, Found and Fixed in Public")
 st.caption(
-    "Both variants run through the *identical* ingestion, clustering, BiLSTM, and evaluation code. "
-    "The only difference is the training data — this page makes the overfitting fix from PROGRESS.md "
-    "concrete instead of just prose."
+    "V1 → V2 fixed an overfitting-prone dataset (identical code, different training data). "
+    "V2 → V3 fixed a generalization failure by swapping a from-scratch BiLSTM for a transfer-learned "
+    "DistilBERT. Both fixes are demonstrated below with real numbers, not just claimed in prose."
 )
 
 summaries = {}
@@ -107,6 +108,48 @@ for col, vid in [(col1, "v1_naive"), (col2, "v2_hardened")]:
             st.info("Run scripts/generate_data.py first.")
 
 st.divider()
+st.header("⚡ V2 (BiLSTM) vs. V3 (Transfer-Learned DistilBERT): Generalization to Real Text")
+st.caption(
+    "V2's BiLSTM learns its own ~196-word vocabulary from scratch — anything outside it collapses to "
+    "near-meaningless <UNK> tokens. V3 fine-tunes a pretrained DistilBERT (frozen early layers, only the "
+    "last 2 layers + head trained — ~21% of parameters) so it already understands English before ever "
+    "seeing this dataset. These sentences are deliberately NOT phrased like the training templates."
+)
+
+stress_path = Path(__file__).resolve().parent.parent / "models" / "stress_test_comparison.json"
+if not stress_path.exists():
+    st.info("Run `python scripts/stress_test_compare.py` to generate this comparison.")
+else:
+    with open(stress_path) as f:
+        stress = json.load(f)
+
+    gap_col1, gap_col2 = st.columns(2)
+    gap_col1.metric("V2 critical-vs-low separation", stress["v2_critical_minus_low_gap"])
+    gap_col2.metric("V3 critical-vs-low separation", stress["v3_critical_minus_low_gap"],
+                     delta=round(stress["v3_critical_minus_low_gap"] - stress["v2_critical_minus_low_gap"], 4))
+
+    stress_df = pd.DataFrame(stress["stress_test_results"])
+    fig3 = go.Figure()
+    fig3.add_trace(go.Bar(x=stress_df.index, y=stress_df["v2_score"], name="V2 (BiLSTM)", marker_color="crimson"))
+    fig3.add_trace(go.Bar(x=stress_df.index, y=stress_df["v3_score"], name="V3 (DistilBERT)", marker_color="seagreen"))
+    fig3.add_hline(y=0.5, line_dash="dash", line_color="gray", annotation_text="0.5 threshold")
+    fig3.update_layout(
+        barmode="group", xaxis_title="Stress-test sentence (see table below)", yaxis_title="Urgency score",
+        title="V2 clusters everything near 0.4-0.5 regardless of true severity. V3 separates them.",
+    )
+    st.plotly_chart(fig3, use_container_width=True)
+
+    st.dataframe(
+        stress_df.rename(columns={"expected": "Expected", "text": "Text", "v2_score": "V2 Score", "v3_score": "V3 Score"}),
+        use_container_width=True, hide_index=True,
+    )
+    st.warning(
+        "⚠️ Every sentence above is real-world phrasing, not template-matching text. V2 scores CRITICAL "
+        "and LOW examples almost identically (~0.02 apart) — it cannot tell them apart. V3 separates them "
+        "by ~0.30, correctly ranking severity even on phrasing it never saw verbatim in training."
+    )
+
+st.divider()
 with st.expander("📖 The full story: what we changed and why (from PROGRESS.md)"):
     st.markdown(
         """
@@ -119,6 +162,14 @@ with st.expander("📖 The full story: what we changed and why (from PROGRESS.md
    on templated text, silhouette keeps climbing as k approaches the number of underlying sentence
    templates. We replaced `argmax(silhouette)` with the **Kneedle max-distance-from-chord elbow method**,
    which is robust to this artifact.
+4. **Then a real person testing the live app found a second, bigger bug**: feeding it genuinely
+   natural phrasing (not matching the training templates) made V2's BiLSTM score critical and positive
+   feedback almost identically — a 40-60% out-of-vocabulary rate on real text collapsed its predictions
+   toward the training mean regardless of actual severity.
+5. **We fixed it with transfer learning**: V3 fine-tunes a pretrained DistilBERT (frozen early layers,
+   ~21% of parameters trainable) instead of learning an embedding table from scratch. Subword
+   tokenization means there's no closed-vocabulary problem at all — it separates real critical and
+   positive feedback by ~0.30 where V2 managed ~0.02.
 
 Full write-up with reasoning: see `PROGRESS.md` in the repository root.
         """
