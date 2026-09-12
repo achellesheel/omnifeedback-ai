@@ -13,7 +13,7 @@
     --text:#1b2030; --text-dim:#5b6478;
     --accent:#c97c1b; --accent-ink:#ffffff; --accent-2:#1e8f82; --good:#2e7d53; --critical:#c4433f;
     --shadow: 0 1px 2px rgba(27,32,48,.06), 0 8px 24px rgba(27,32,48,.06);
-    --card-bg: #1b2030; --card-text:#f4f1e8;
+    --card-bg:#1b2030; --card-text:#f4f1e8; --card-dim:#9599ad; --card-border:#333a52;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -21,7 +21,7 @@
       --text:#e7eaf3; --text-dim:#99a2bc;
       --accent:#f2a93b; --accent-ink:#10141f; --accent-2:#4fd1c5; --good:#56c08a; --critical:#e2635f;
       --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
-      --card-bg:#0c0f18; --card-text:#f4f1e8;
+      --card-bg:#0c0f18; --card-text:#f4f1e8; --card-dim:#7d8299; --card-border:#262c40;
     }
   }
   :root[data-theme="dark"]{
@@ -29,7 +29,7 @@
     --text:#e7eaf3; --text-dim:#99a2bc;
     --accent:#f2a93b; --accent-ink:#10141f; --accent-2:#4fd1c5; --good:#56c08a; --critical:#e2635f;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
-    --card-bg:#0c0f18; --card-text:#f4f1e8;
+    --card-bg:#0c0f18; --card-text:#f4f1e8; --card-dim:#7d8299; --card-border:#262c40;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
@@ -39,55 +39,84 @@
   #deck{position:relative; width:100%; height:100dvh; overflow:hidden;}
   .slide{
     position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-    padding:4vh clamp(16px,5vw,60px) 12vh; overflow-y:auto;
+    padding:3.5vh clamp(16px,5vw,60px) 12vh; overflow-y:auto;
     opacity:0; transform:translateY(14px); transition:opacity .35s ease, transform .35s ease; pointer-events:none;
   }
   .slide.active{opacity:1; transform:translateY(0); pointer-events:auto;}
-  .slide-inner{max-width:920px; width:100%; margin:0 auto;}
+  .slide-inner{max-width:960px; width:100%; margin:0 auto;}
 
-  .top-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  .top-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
   .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:8px;}
   .eyebrow::before{content:""; width:14px; height:2px; background:var(--accent);}
   .day-count{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--text-dim);}
 
-  .content-grid{display:grid; grid-template-columns: 320px 1fr; gap:24px; align-items:start;}
-  @media (max-width:820px){ .content-grid{grid-template-columns:1fr;} }
+  .content-grid{display:grid; grid-template-columns: 380px 1fr; gap:22px; align-items:start;}
+  @media (max-width:860px){ .content-grid{grid-template-columns:1fr;} }
 
   /* the screenshot-able visual card */
   .visual-card{
-    aspect-ratio: 4/5; width:100%; max-width:320px;
+    aspect-ratio: 4/5; width:100%; max-width:380px;
     background:var(--card-bg); color:var(--card-text); border-radius:18px;
-    padding:28px 24px; display:flex; flex-direction:column; justify-content:space-between;
+    padding:22px 22px 18px; display:flex; flex-direction:column;
     box-shadow:var(--shadow); position:relative; overflow:hidden;
   }
   .visual-card::before{
     content:""; position:absolute; top:-40%; right:-30%; width:70%; height:70%;
-    background:radial-gradient(circle, color-mix(in srgb, var(--accent) 35%, transparent), transparent 70%);
+    background:radial-gradient(circle, color-mix(in srgb, var(--accent) 30%, transparent), transparent 70%);
     pointer-events:none;
   }
-  .visual-card .vc-top{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); position:relative; z-index:1;}
-  .visual-card .vc-headline{font-family:"IBM Plex Serif",Georgia,serif; font-weight:700; font-size:clamp(20px,2.6vw,26px); line-height:1.28; margin:14px 0; text-wrap:balance; position:relative; z-index:1;}
-  .visual-card .vc-sub{font-size:13.5px; color:#c7cadb; line-height:1.5; position:relative; z-index:1;}
-  .visual-card .vc-brand{font-family:"IBM Plex Mono",monospace; font-size:11px; color:#8a8fa3; display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1;}
+  .vc-top{font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); position:relative; z-index:1;}
+  .vc-headline{font-family:"IBM Plex Serif",Georgia,serif; font-weight:700; font-size:17.5px; line-height:1.28; margin:10px 0 12px; text-wrap:balance; position:relative; z-index:1;}
+  .vc-chart{flex:1; display:flex; flex-direction:column; justify-content:center; position:relative; z-index:1; min-height:0;}
+  .vc-sub{font-size:11.5px; color:var(--card-dim); line-height:1.45; margin-top:10px; position:relative; z-index:1;}
+  .vc-brand{font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--card-dim); display:flex; justify-content:space-between; align-items:center; margin-top:12px; position:relative; z-index:1;}
   .vc-brand .dot{width:6px; height:6px; border-radius:50%; background:var(--accent); display:inline-block; margin-right:6px;}
+
+  svg text{font-family:"IBM Plex Mono",monospace;}
+
+  /* flow diagram (pure HTML/CSS boxes, screenshot-safe) */
+  .flow-v{display:flex; flex-direction:column; gap:6px; align-items:stretch;}
+  .flow-h{display:flex; flex-direction:row; gap:6px; align-items:center; justify-content:center; flex-wrap:wrap;}
+  .fbox{background:var(--card-border); border:1px solid color-mix(in srgb, var(--accent) 30%, var(--card-border)); border-radius:8px; padding:7px 10px; font-size:11px; font-weight:500; text-align:center; color:var(--card-text);}
+  .fbox.accent{border-color:var(--accent); color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card-border));}
+  .farrow{text-align:center; color:var(--card-dim); font-size:13px; line-height:1;}
+  .farrow.h{padding:0 2px;}
+  .branch-wrap{display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .branch-row{display:flex; gap:10px; width:100%;}
+  .branch-row .fbox{flex:1;}
+
+  /* ner highlight */
+  .ner-text{font-size:13px; line-height:1.9; color:var(--card-text);}
+  .ner-tag{padding:1px 5px; border-radius:5px; font-size:10.5px; font-family:"IBM Plex Mono",monospace; margin-left:3px; vertical-align:2px;}
+
+  /* scatter dots / density */
+  .dot-field{display:flex; flex-wrap:wrap; gap:4px; align-content:flex-start;}
+  .dot-field .pt{width:6px; height:6px; border-radius:50%; flex-shrink:0;}
+
+  /* checklist grid */
+  .check-grid{display:flex; flex-direction:column; gap:8px;}
+  .check-item{display:flex; align-items:center; gap:8px; font-size:12px;}
+  .check-item .ck{width:16px; height:16px; border-radius:50%; background:var(--good); color:#0c0f18; display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0;}
+
+  .persona-row{display:flex; flex-direction:column; gap:8px;}
+  .persona{display:flex; align-items:center; gap:10px; background:var(--card-border); border-radius:8px; padding:8px 10px;}
+  .persona .glyph{font-size:16px;}
+  .persona .plabel{font-size:11.5px; font-weight:600;}
+  .persona .pdesc{font-size:10px; color:var(--card-dim);}
+
+  .stat-huge{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:56px; line-height:1; text-align:center; color:var(--critical);}
+  .stat-tag{text-align:center; font-size:11px; color:var(--card-dim); margin-top:4px; letter-spacing:.03em;}
 
   .text-col{display:flex; flex-direction:column; gap:16px;}
   .post-box{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow);}
   .post-box .head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
   .post-box .head .t{font-family:"IBM Plex Mono",monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim);}
   .post-box p{font-size:14.5px; line-height:1.6; margin:0; white-space:pre-wrap;}
-  .copy-btn{
-    font-family:"IBM Plex Mono",monospace; font-size:11.5px; padding:5px 11px; border-radius:7px;
-    border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer;
-  }
+  .copy-btn{font-family:"IBM Plex Mono",monospace; font-size:11.5px; padding:5px 11px; border-radius:7px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer;}
   .copy-btn:hover{border-color:var(--accent); color:var(--accent);}
   .copy-btn.copied{border-color:var(--good); color:var(--good);}
 
-  #navbar{
-    position:absolute; left:0; right:0; bottom:0; height:64px;
-    display:flex; align-items:center; justify-content:center; gap:18px;
-    background:linear-gradient(to top, var(--bg) 55%, transparent); z-index:10;
-  }
+  #navbar{position:absolute; left:0; right:0; bottom:0; height:64px; display:flex; align-items:center; justify-content:center; gap:18px; background:linear-gradient(to top, var(--bg) 55%, transparent); z-index:10;}
   .nav-btn{width:38px; height:38px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px;}
   .nav-btn:hover{border-color:var(--accent); color:var(--accent);}
   .nav-btn:disabled{opacity:.35; cursor:default;}
@@ -106,6 +135,220 @@
 </div>
 
 <script>
+// ---------- real project data ----------
+var V1_SIL = [0.2667,0.3975,0.5322,0.6276,0.7276,0.8118,0.9039,1.0,1.0,1.0,1.0];
+var V2_SIL = [0.0726,0.1191,0.1468,0.1921,0.2235,0.2577,0.2923,0.3283,0.3595,0.3749,0.3910];
+var KS = [2,3,4,5,6,7,8,9,10,11,12];
+var TRAIN_LOSS = [0.0320,0.0191,0.0188,0.0195,0.0188,0.0188];
+var VAL_LOSS  = [0.0192,0.0190,0.0193,0.0190,0.0193,0.0190];
+var THRESH = [0.05,0.11,0.17,0.23,0.29,0.35,0.41,0.47,0.53,0.59,0.65,0.71,0.77,0.83,0.89,0.95];
+var THRESH_F1 = [0.2516,0.2516,0.7168,0.8166,0.8166,0.8166,0.8166,0.8265,0.8157,0.7294,0.7272,0.7272,0.6995,0.414,0.3989,0.3989];
+var CHANNEL_MEANS = [
+  {label:"Call Ctr", v:0.3748},{label:"Email", v:0.3773},{label:"Mobile", v:0.3883},
+  {label:"Twitter", v:0.3686},{label:"Web Rev", v:0.3779}
+];
+
+// ---------- generic SVG line chart ----------
+function lineChart(series /* [{data:[...], color, dashed}] */, xLabels, opts){
+  opts = opts || {};
+  var w=300, h=150, padL=30, padR=10, padT=10, padB=22;
+  var innerW=w-padL-padR, innerH=h-padT-padB;
+  var minY = opts.minY !== undefined ? opts.minY : 0;
+  var maxY = opts.maxY !== undefined ? opts.maxY : 1;
+  var n = xLabels.length;
+  function x(i){ return padL + (i/(n-1))*innerW; }
+  function y(v){ return padT + (1-(v-minY)/(maxY-minY))*innerH; }
+  var svg = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img">';
+  [0,0.25,0.5,0.75,1].forEach(function(t){
+    var val = minY + t*(maxY-minY);
+    svg += '<line x1="'+padL+'" y1="'+y(val).toFixed(1)+'" x2="'+(w-padR)+'" y2="'+y(val).toFixed(1)+'" stroke="#333a52" stroke-width="1"/>';
+    svg += '<text x="'+(padL-6)+'" y="'+(y(val)+3).toFixed(1)+'" font-size="8" fill="#7d8299" text-anchor="end">'+val.toFixed(2)+'</text>';
+  });
+  xLabels.forEach(function(lb,i){
+    if (i % Math.ceil(n/6) === 0 || i===n-1) svg += '<text x="'+x(i).toFixed(1)+'" y="'+(h-6)+'" font-size="8" fill="#7d8299" text-anchor="middle">'+lb+'</text>';
+  });
+  series.forEach(function(s){
+    var d = s.data.map(function(v,i){ return (i===0?'M':'L')+x(i).toFixed(1)+','+y(v).toFixed(1); }).join(' ');
+    svg += '<path d="'+d+'" fill="none" stroke="'+s.color+'" stroke-width="2.2" stroke-dasharray="'+(s.dashed?'4,3':'0')+'"/>';
+    s.data.forEach(function(v,i){ svg += '<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="2.2" fill="'+s.color+'"/>'; });
+  });
+  if (opts.markIdx !== undefined){
+    var mi = opts.markIdx, ms = opts.markSeries;
+    svg += '<circle cx="'+x(mi).toFixed(1)+'" cy="'+y(ms[mi]).toFixed(1)+'" r="5" fill="none" stroke="var(--accent)" stroke-width="1.5"/>';
+  }
+  svg += '</svg>';
+  var legend = '<div style="display:flex; gap:12px; margin-top:6px; font-size:9.5px; flex-wrap:wrap;">' +
+    series.map(function(s){ return '<span style="color:'+s.color+'">● '+s.label+'</span>'; }).join('') + '</div>';
+  return svg + legend;
+}
+
+function barChart(bars /* [{label, v, color}] */, maxV){
+  var w=300, h=150, padB=20, padT=6;
+  var barW = (w-20)/bars.length - 10;
+  var innerH = h-padB-padT;
+  var svg = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img">';
+  bars.forEach(function(b,i){
+    var bh = (b.v/maxV)*innerH;
+    var bx = 10 + i*(barW+10);
+    var by = h - padB - bh;
+    svg += '<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="4" fill="'+b.color+'"/>';
+    svg += '<text x="'+(bx+barW/2).toFixed(1)+'" y="'+(by-5)+'" font-size="9.5" fill="#f4f1e8" text-anchor="middle" font-weight="600">'+b.v+'</text>';
+    svg += '<text x="'+(bx+barW/2).toFixed(1)+'" y="'+(h-6)+'" font-size="8" fill="#7d8299" text-anchor="middle">'+b.label+'</text>';
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+function groupedBarChart(groups /* [{label, a, b}] */, colorA, colorB, labelA, labelB){
+  var w=300, h=150, padB=20, padT=6;
+  var groupW = (w-20)/groups.length;
+  var barW = groupW*0.34;
+  var innerH = h-padB-padT;
+  var svg = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img">';
+  groups.forEach(function(g,i){
+    var gx = 10 + i*groupW;
+    var ah = g.a*innerH, bh = g.b*innerH;
+    svg += '<rect x="'+gx.toFixed(1)+'" y="'+(h-padB-ah).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+ah.toFixed(1)+'" rx="3" fill="'+colorA+'"/>';
+    svg += '<rect x="'+(gx+barW+4).toFixed(1)+'" y="'+(h-padB-bh).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="3" fill="'+colorB+'"/>';
+    svg += '<text x="'+(gx+barW).toFixed(1)+'" y="'+(h-6)+'" font-size="7.5" fill="#7d8299" text-anchor="middle">'+g.label+'</text>';
+  });
+  svg += '</svg>';
+  var legend = '<div style="display:flex; gap:12px; margin-top:6px; font-size:9.5px;"><span style="color:'+colorA+'">● '+labelA+'</span><span style="color:'+colorB+'">● '+labelB+'</span></div>';
+  return svg + legend;
+}
+
+function flowV(nodes){ // vertical stack of boxes with down-arrows
+  return '<div class="flow-v">' + nodes.map(function(n,i){
+    return (i>0?'<div class="farrow">↓</div>':'') + '<div class="fbox'+(n.accent?' accent':'')+'">'+n.label+'</div>';
+  }).join('') + '</div>';
+}
+function flowH(nodes){ // horizontal row of boxes with right-arrows, wraps
+  return '<div class="flow-h">' + nodes.map(function(n,i){
+    return (i>0?'<span class="farrow h">→</span>':'') + '<div class="fbox'+(n.accent?' accent':'')+'">'+n.label+'</div>';
+  }).join('') + '</div>';
+}
+function convergeDiagram(sources, target){
+  return '<div style="display:flex; align-items:center; gap:10px;">' +
+    '<div class="flow-v" style="flex:1;">' + sources.map(function(s){ return '<div class="fbox">'+s+'</div>'; }).join('') + '</div>' +
+    '<div class="farrow" style="font-size:18px;">→</div>' +
+    '<div class="fbox accent" style="flex:1; display:flex; align-items:center; justify-content:center;">'+target+'</div>' +
+  '</div>';
+}
+function branchDiagram(top, branches){
+  return '<div class="branch-wrap">' +
+    '<div class="fbox">'+top+'</div>' +
+    '<div class="farrow">↙&nbsp;&nbsp;&nbsp;&nbsp;↘</div>' +
+    '<div class="branch-row">' + branches.map(function(b){ return '<div class="fbox'+(b.accent?' accent':'')+'">'+b.label+'</div>'; }).join('') + '</div>' +
+  '</div>';
+}
+function funnelDiagram(sources, target){
+  return '<div style="display:flex; flex-direction:column; gap:8px; align-items:center;">' +
+    '<div class="flow-h" style="flex-wrap:wrap;">' + sources.map(function(s){ return '<div class="fbox" style="font-size:9.5px; padding:5px 7px;">'+s+'</div>'; }).join('') + '</div>' +
+    '<div class="farrow">↓ ↓ ↓ ↓ ↓</div>' +
+    '<div class="fbox accent">'+target+'</div>' +
+  '</div>';
+}
+function schemaDiagram(){
+  return '<div style="display:flex; flex-direction:column; align-items:center; gap:8px;">' +
+    '<div class="fbox accent">Fact_Feedback</div>' +
+    '<div class="farrow">↑&nbsp;&nbsp;↑&nbsp;&nbsp;↑</div>' +
+    '<div class="branch-row">' +
+      '<div class="fbox">Dim_User</div><div class="fbox">Dim_Channel</div><div class="fbox">Dim_Product</div>' +
+    '</div>' +
+  '</div>';
+}
+function nerHighlight(){
+  return '<div class="ner-text">The <span class="ner-tag" style="background:#3a2f1a;color:#f2a93b;">iPhone 15</span><span class="ner-tag" style="background:#3a2f1a;color:#f2a93b;">MISC</span> crashed after the <span class="ner-tag" style="background:#3a2f1a;color:#f2a93b;">iOS 17.2</span><span class="ner-tag" style="background:#3a2f1a;color:#f2a93b;">MISC</span> update, and <span class="ner-tag" style="background:#16302c;color:#4fd1c5;">Apple</span><span class="ner-tag" style="background:#16302c;color:#4fd1c5;">ORG</span> support in <span class="ner-tag" style="background:#241c38;color:#b79cf0;">California</span><span class="ner-tag" style="background:#241c38;color:#b79cf0;">LOC</span> hasn\'t responded.</div>';
+}
+function dotDensity(n, size, color){
+  var s='<div class="dot-field">';
+  for (var i=0;i<n;i++){ s += '<span class="pt" style="width:'+size+'px;height:'+size+'px;background:'+color+';"></span>'; }
+  return s+'</div>';
+}
+function scatterClusters(){
+  var w=300,h=150;
+  var clusters = [
+    {cx:70,cy:50,color:'#f2a93b',n:9},{cx:190,cy:40,color:'#4fd1c5',n:8},
+    {cx:100,cy:110,color:'#e2635f',n:7},{cx:220,cy:105,color:'#56c08a',n:8}
+  ];
+  var svg='<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img">';
+  clusters.forEach(function(c){
+    for(var i=0;i<c.n;i++){
+      var dx = c.cx + (Math.sin(i*2.1)*22);
+      var dy = c.cy + (Math.cos(i*1.7)*18);
+      svg += '<circle cx="'+dx.toFixed(1)+'" cy="'+dy.toFixed(1)+'" r="4" fill="'+c.color+'" opacity="0.85"/>';
+    }
+  });
+  svg+='</svg>';
+  return svg;
+}
+function checklistGrid(items){
+  return '<div class="check-grid">' + items.map(function(t){
+    return '<div class="check-item"><span class="ck">✓</span>'+t+'</div>';
+  }).join('') + '</div>';
+}
+function personaRow(items){
+  return '<div class="persona-row">' + items.map(function(p){
+    return '<div class="persona"><span class="glyph">'+p.g+'</span><div><div class="plabel">'+p.l+'</div><div class="pdesc">'+p.d+'</div></div></div>';
+  }).join('') + '</div>';
+}
+function pulseWave(){
+  var w=300,h=110;
+  var path='M0,70 L30,68 L60,72 L90,66 L120,70 ';
+  var spike='L140,70 L150,20 L160,70 ';
+  var tail='L190,68 L220,72 L250,66 L280,70 L300,68';
+  var svg='<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img">';
+  svg+='<path d="'+path+spike+tail+'" fill="none" stroke="#4fd1c5" stroke-width="2"/>';
+  svg+='<circle cx="150" cy="20" r="5" fill="none" stroke="#f2a93b" stroke-width="2"/>';
+  svg+='<text x="150" y="12" font-size="9" fill="#f2a93b" text-anchor="middle">anomaly</text>';
+  svg+='</svg>';
+  return svg;
+}
+function bugDiagram(){
+  return '<div style="display:flex; flex-direction:column; gap:8px;">' +
+    '<div class="fbox" style="border-color:#e2635f; color:#e2635f; text-align:left;">✕ Docker healthcheck — curl missing in slim image</div>' +
+    '<div class="fbox" style="border-color:#e2635f; color:#e2635f; text-align:left;">✕ Streamlit Cloud → Python 3.14, zero torch wheels</div>' +
+    '<div class="farrow">↓</div>' +
+    '<div class="fbox accent" style="text-align:left;">✓ Both fixed after running the real deploy, not just the build</div>' +
+  '</div>';
+}
+function statBig(value, tag, color){
+  return '<div class="stat-huge" style="color:'+color+';">'+value+'</div><div class="stat-tag">'+tag+'</div>';
+}
+
+// ---------- per-day visuals ----------
+var VISUALS = [
+  function(){ return pulseWave(); },
+  function(){ return convergeDiagram(['Mobile App','Twitter','Email','Call Center'], 'Urgency Score'); },
+  function(){ return statBig('1.000', 'F1 SCORE — SUSPICIOUSLY PERFECT', '#e2635f'); },
+  function(){ return groupedBarChart([{label:'Silhouette', a:1.0, b:0.328}], '#e2635f', '#56c08a', 'V1 Naive', 'V2 Hardened'); },
+  function(){ return flowV([{label:'Regex Ingestor'},{label:'SQL Star Schema'},{label:'Clustering + BiLSTM + NER/BART'},{label:'GenAI Copilot', accent:true},{label:'Dashboard'}]); },
+  function(){ return schemaDiagram(); },
+  function(){ return scatterClusters(); },
+  function(){ return lineChart([{data:V1_SIL,color:'#e2635f',label:'V1 (hits 1.0)'},{data:V2_SIL,color:'#56c08a',label:'V2 (real elbow)'}], KS, {}); },
+  function(){ return flowV([{label:'Embedding (128)'},{label:'BiLSTM (64×2 dir)'},{label:'Dropout (0.3)'},{label:'Sigmoid → Urgency', accent:true}]); },
+  function(){ return lineChart([{data:TRAIN_LOSS,color:'#4fd1c5',label:'train loss'},{data:VAL_LOSS,color:'#f2a93b',label:'val loss'}], ['1','2','3','4','5','6'], {minY:0.01,maxY:0.035, markIdx:1, markSeries:VAL_LOSS}); },
+  function(){ return groupedBarChart([{label:'Silh.',a:1.0,b:0.328},{label:'Base F1',a:1.0,b:0.914},{label:'BiLSTM F1',a:1.0,b:0.821}], '#e2635f', '#56c08a', 'V1', 'V2'); },
+  function(){ return '<div style="display:flex; justify-content:space-around; align-items:flex-end;">' +
+      '<div style="text-align:center;">'+dotDensity(9,10,'#e2635f')+'<div class="stat-tag">9 sentences (V1)</div></div>' +
+      '<div style="text-align:center; max-width:150px;">'+dotDensity(140,4,'#56c08a')+'<div class="stat-tag">212 sentences (V2)</div></div>' +
+    '</div>'; },
+  function(){ return nerHighlight(); },
+  function(){ return funnelDiagram(['Crash','Billing','Shipping','Outage','Latency'], 'Executive Brief'); },
+  function(){ return flowH([{label:'Feedback'},{label:'CoT Reasoning'},{label:'Structured JSON', accent:true}]); },
+  function(){ return branchDiagram('No API key?', [{label:'Local Rules (free)', accent:true},{label:'Claude API (paid)'}]); },
+  function(){ return lineChart([{data:THRESH_F1,color:'#f2a93b',label:'macro-F1'}], THRESH.map(function(t){return t.toFixed(2);}), {minY:0.2,maxY:0.9, markIdx:7, markSeries:THRESH_F1}); },
+  function(){ return barChart(CHANNEL_MEANS.map(function(c){ return {label:c.label, v:c.v, color:'#4fd1c5'}; }), 0.5); },
+  function(){ return bugDiagram(); },
+  function(){ return personaRow([
+      {g:'🎧', l:'Support Manager', d:'Triage → urgency score → draft reply'},
+      {g:'📊', l:'Product Manager', d:'Trends → clusters → stats page'},
+      {g:'🔍', l:'Technical Reviewer', d:'Model Comparison → verify claims'}
+    ]); },
+  function(){ return checklistGrid(['Live Streamlit app','GitHub repo, 25 tests','15-slide deck','Data insights','Working paper']); }
+];
+
+// ---------- day text content ----------
 var DAYS = [
 {h:"I built an AI system that catches its own overfitting.", s:"Live. In the app. Not in a slide.",
  li:"For the last few weeks I've been building OmniFeedback AI — an enterprise feedback-triage platform that ingests multi-channel customer feedback, scores urgency with a custom PyTorch model, and drafts resolutions with a GenAI copilot. But the part I'm proudest of isn't a feature. It's a bug I found in my own project — and how I fixed it, live, in the shipped app. Over the next 21 days I'm going to walk through the whole build: the architecture, the algorithms, the bugs, and the honest metrics. Starting today.",
@@ -135,7 +378,7 @@ var DAYS = [
  li:"One of the classical ML pieces in OmniFeedback AI: TF-IDF vectorization feeding K-Means clustering, to automatically group feedback into themes like 'billing,' 'app crashes,' or 'shipping delays' — without anyone hand-labeling a single record. The interesting engineering question isn't 'can K-Means cluster text' (it can) — it's 'how do you pick K without cheating yourself.' That turned out to be a genuinely tricky problem, and next up I'll show you the bug I found in my own approach to it.",
  tw:"TF-IDF + K-Means auto-discovers feedback themes with zero hand-labeling. The hard part isn't clustering — it's picking K honestly. Found a real bug in how I was doing that. Next post. 👀"},
 
-{h:"argmax(silhouette) picked k=12.", s:"Every time. Even when it shouldn't have.",
+{h:"argmax(silhouette) picked k=12.", s:"Every time. Even when it shouldn't have. (Real curves, both variants.)",
  li:"Here's a genuinely interesting bug: I was picking K-Means' cluster count by maximizing the silhouette score. Simple, standard approach. Except on my (early, naive) synthetic text, the silhouette score kept climbing as K increased — all the way to the edge of the range I was testing. It turns out that on templated text, more clusters just means tighter groups of near-duplicate sentences — the metric doesn't plateau, so 'pick the highest silhouette' always just picks the largest K you tested. I fixed it with the Kneedle algorithm — finding the point of maximum curvature relative to a straight line across the whole curve — instead of blindly maximizing. Small algorithmic choice, real difference in output.",
  tw:"Bug I found in my own clustering code: maximizing silhouette score on templated text just picks the LARGEST k you tested, every time — the curve never plateaus. Fixed it with the Kneedle elbow method instead of naive argmax."},
 
@@ -143,7 +386,7 @@ var DAYS = [
  li:"The core deep learning piece in OmniFeedback AI is a bidirectional LSTM I built in PyTorch from scratch — an embedding layer, a BiLSTM reading text both forward and backward, dropout for regularization, and a sigmoid output squashing everything into a continuous 0–1 urgency score. Nothing fancy compared to a fine-tuned transformer, but it's fast, cheap to run, and — when trained and evaluated properly (more on that next) — genuinely accurate. Sometimes the simpler architecture is the right engineering call.",
  tw:"Built a custom BiLSTM in PyTorch to score customer feedback urgency 0.0–1.0. Embedding → bidirectional LSTM → dropout → sigmoid. Simple architecture, but trained properly it holds its own. Details next."},
 
-{h:"4 things standing between this model and overfitting", s:"Fixed train/val/test split · Early stopping · Dropout 0.3 · L2 weight decay",
+{h:"4 things standing between this model and overfitting", s:"Real train/val loss curves — early stop triggered near epoch 2",
  li:"How I kept the BiLSTM in OmniFeedback AI from overfitting, concretely: (1) a fixed-seed train/val/test split done once, before the model ever sees data — no peeking, no re-splitting to get a better number; (2) early stopping on validation loss, so training halts the moment the model stops generalizing; (3) dropout at 0.3; (4) L2 weight decay on the optimizer. None of these are novel — they're standard practice. But 'standard practice, actually implemented and verified' is rarer than it should be in portfolio projects, and it's the difference between a number you can trust and a number you can't.",
  tw:"How I keep my BiLSTM honest: fixed train/val/test split (no peeking), early stopping on val loss, dropout, L2 weight decay. None of this is novel. All of it is easy to skip under time pressure. I didn't skip it."},
 
@@ -151,11 +394,11 @@ var DAYS = [
  li:"Here's the full before/after comparison I've been building up to. V1 (naive training data): classifier F1 1.000, clustering silhouette 1.000, BiLSTM F1 1.000. V2 (hardened training data, same code): classifier F1 0.914, silhouette 0.328, BiLSTM F1 0.821. V2's numbers are lower. They're also the ones I trust — because I know exactly why they're lower: 212 unique training sentences instead of 9, deliberately ambiguous cases, and simulated label noise. Both versions are live in the app right now — you can flip between them and see this exact comparison yourself, with the actual charts, not just a screenshot.",
  tw:"The full reveal: V1 scored F1=1.000 everywhere. V2 (harder, more honest data) scores 0.914 / 0.328 / 0.821. Lower numbers. Higher trust. Both versions are live in the app — go flip the switch yourself."},
 
-{h:"Why a ‘perfect’ score is the red flag, not the win", s:"It means the model memorized 9 sentences. Not that it understood language.",
+{h:"Why a ‘perfect’ score is the red flag, not the win", s:"9 memorized sentences vs. 212 genuinely distinct ones",
  li:"I want to spell out exactly why V1's perfect scores are bad news, not good news. V1's entire training set was built from 9 unique phrases repeated across 4,000 rows. A model — or even a simple clustering algorithm — can trivially get a perfect score by matching on exact wording. That's memorization, not understanding. The moment you show it a sentence it hasn't seen verbatim, it has no idea what to do. V2 forces the model to generalize across 212 distinct phrasings, genuinely ambiguous cases, and noisy labels — which is why its scores are lower AND more meaningful. I think this distinction — between a high score and a trustworthy score — is one of the most under-discussed ideas in applied ML.",
  tw:"A model can score 'perfectly' by memorizing 9 sentences. That's not intelligence, it's a party trick. The distinction between a HIGH score and a TRUSTWORTHY score is one of the most under-discussed ideas in ML. My project makes it visible, on purpose."},
 
-{h:"iPhone 15 · MISC · 0.99", s:"BERT correctly extracted 4/4 real entities from one sentence",
+{h:"iPhone 15 · MISC · 0.99", s:"BERT correctly extracted 4/4 real entities from one real sentence",
  li:"Tested OmniFeedback AI's entity extraction (BERT NER) on a realistic support message: 'The iPhone 15 crashed after the iOS 17.2 update, and Apple support in California hasn't responded.' It correctly pulled out iPhone 15, iOS 17.2, Apple, and California — all with 94%+ confidence. This is the kind of feature that sounds simple in a spec document and is genuinely satisfying to see work correctly on a sentence I wrote myself, not a cherry-picked example from a paper.",
  tw:"Ran a real test sentence through BERT NER: 'The iPhone 15 crashed after the iOS 17.2 update, and Apple support in California hasn't responded.' Correctly extracted all 4 entities, 94%+ confidence each. Small thing. Satisfying to watch work."},
 
@@ -171,11 +414,11 @@ var DAYS = [
  li:"A design decision I'm genuinely proud of: OmniFeedback AI's GenAI copilot works with zero configuration and zero API cost — it falls back to a deterministic, rule-based response generator when no LLM API key is present. Add an ANTHROPIC_API_KEY to the app's secrets, and it automatically upgrades to Claude for materially better responses — no code change required. This matters because a public demo that crashes the moment someone forgets to configure a secret is a bad first impression, and a real enterprise pilot shouldn't have to pay per-token costs before anyone's decided the product is worth it.",
  tw:"Public AI demos that crash because a secret wasn't configured are a bad look. So OmniFeedback AI's copilot has a free, zero-config fallback by default — and auto-upgrades to Claude the moment you add an API key. No code change needed."},
 
-{h:"0.5 vs 0.48", s:"Swept 181 thresholds. Found a 0.3-point gain. That's a good sign.",
- li:"Ran a threshold-sensitivity analysis on the urgency model: swept 181 candidate cutoffs between 0.05 and 0.95, looking for the F1-optimal decision threshold. Found it at 0.48 — barely left of the default 0.5 — for a 0.3-point F1 improvement. That tiny gap is actually a good result: it means the 'obvious' threshold I shipped with wasn't leaving meaningful accuracy on the table. Side note: my first attempt at this analysis had a bug — I was comparing two different F1 definitions and got a nonsensical result where the 'optimal' threshold scored worse than the default. Caught it because the numbers didn't add up, not because I was looking for it.",
- tw:"Swept 181 thresholds looking for the optimal urgency cutoff. Found it at 0.48 vs the default 0.5 — only a 0.3pt F1 gain. That's actually good news: the obvious default wasn't leaving accuracy on the table. (First attempt had a bug — numbers didn't add up, caught it, fixed it.)"},
+{h:"0.5 vs 0.48", s:"Real threshold sweep, 31 candidate cutoffs — peak circled",
+ li:"Ran a threshold-sensitivity analysis on the urgency model: swept candidate cutoffs between 0.05 and 0.95, looking for the F1-optimal decision threshold. Found it at 0.48 — barely left of the default 0.5 — for a 0.3-point F1 improvement. That tiny gap is actually a good result: it means the 'obvious' threshold I shipped with wasn't leaving meaningful accuracy on the table. Side note: my first attempt at this analysis had a bug — I was comparing two different F1 definitions and got a nonsensical result where the 'optimal' threshold scored worse than the default. Caught it because the numbers didn't add up, not because I was looking for it.",
+ tw:"Swept 31 thresholds looking for the optimal urgency cutoff. Found it at 0.48 vs the default 0.5 — only a 0.3pt F1 gain. That's actually good news: the obvious default wasn't leaving accuracy on the table. (First attempt had a bug — numbers didn't add up, caught it, fixed it.)"},
 
-{h:"χ² = 4.18, p = 0.840", s:"Channel and urgency are NOT statistically associated. Here's why — and it's not good news.",
+{h:"χ² = 4.18, p = 0.840", s:"Real per-channel urgency means — note how flat they are",
  li:"Not every finding in a project makes the product look better, and I think that's worth posting about too. I ran a chi-squared test on OmniFeedback AI's synthetic data to check whether feedback channel (Twitter, email, app, etc.) is associated with urgency level. Result: p=0.840 — no significant association. Digging in, I found the actual cause: my synthetic data generator assigns channel randomly, independent of the feedback content. In the real world, channel almost certainly would carry signal (public Twitter complaints skew toward visible outages, for instance) — but my synthetic generator doesn't model that yet. I'd rather document that limitation plainly than let a clean chi-squared page imply a finding that isn't really there.",
  tw:"Ran a chi-squared test expecting to find channel affects urgency. Got p=0.840 — nothing. Turned out my synthetic data generator assigns channel randomly, independent of content. Documenting the limitation honestly instead of hiding a null result."},
 
@@ -210,6 +453,7 @@ var DAYS = [
           '<div class="visual-card">' +
             '<div class="vc-top">OmniFeedback AI · Day ' + (i+1) + '</div>' +
             '<div class="vc-headline">' + d.h + '</div>' +
+            '<div class="vc-chart">' + VISUALS[i]() + '</div>' +
             '<div class="vc-sub">' + d.s + '</div>' +
             '<div class="vc-brand"><span><span class="dot"></span>github.com/achellesheel/omnifeedback-ai</span></div>' +
           '</div>' +

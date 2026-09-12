@@ -81,6 +81,10 @@ def main():
         "f1_at_0.5": f1_at_05,
         "best_threshold": round(best_threshold, 4),
         "f1_at_best_threshold": round(best_f1, 4),
+        "threshold_sweep": {
+            "thresholds": [round(float(t), 3) for t in candidate_thresholds[::6]],
+            "macro_f1": [round(float(v), 4) for v in macro_f1s[::6]],
+        },
         "confusion_matrix_at_best_threshold": {"tn": int(tn_b), "fp": int(fp_b), "fn": int(fn_b), "tp": int(tp_b)},
         "pred_vs_true_correlation": round(correlation, 4),
         "channel_breakdown": channel_breakdown,
