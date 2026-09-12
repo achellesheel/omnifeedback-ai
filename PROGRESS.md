@@ -523,3 +523,39 @@ new concrete artifacts:
 new page logic (metric dict formatting, flip-example filtering, risk-tier computation and column rename)
 against the real JSON files and confirmed the numbers (3 critical-trigger flips, 4/8 stress-test tier
 flips) match what's in the report; live Streamlit server boots cleanly with no tracebacks.
+
+## 2026-09-13 — Milestone 13: Executive summary barely changed between n=17 and n=46 — diagnosed, not guessed
+
+**Found by**: a screenshot comparing the Batch Executive Summary at slider values 17 and 46 — the output
+was almost identical (3 of 4 sentences shared verbatim).
+
+**Diagnosis, confirmed against real data before touching any code**: queried the warehouse directly.
+Among the top 46 most-urgent records by `urgency_score`, only **30 were unique raw text** — 16 were exact
+duplicates of already-included sentences with only filler words changed (e.g., "Been on hold for an
+hour/two hours/45 minutes trying to reach a human" counted 4 times). Root cause: the synthetic generator
+draws critical feedback from only 8 template families (`scripts/generate_data.py`), so as N grows past
+the low teens, most "new" records the slider adds are near-duplicates of ones BART already saw — the
+summarizer was correctly condensing what it was given, but what it was given had far less real information
+than its row count implied. Confirmed by counting unique texts at several N: n=5→5 unique, n=17→12,
+n=46→30, n=100→43, plateauing around 212 total unique texts in the full dataset (a familiar number — the
+same 212-unique-sentence figure from the V1-vs-V2 story, since urgency ranking pulls disproportionately
+from the same template family repeatedly at the high end).
+
+**Fix**: `pages/4_NER_and_Summarization.py` now deduplicates on `raw_text` *before* slicing the top-N,
+so the slider controls how many **distinct** complaints reach BART rather than how many rows (duplicates
+included). Added a caption showing how many unique critical texts exist in the dataset, so the behavior
+is transparent rather than mysterious. Verified directly: with dedup, n=17 and n=46 now feed genuinely
+different sentences and produce genuinely different summaries.
+
+**Honest residual behavior, documented rather than hidden**: even after the fix, a larger N can
+occasionally produce a *shorter* summary than a smaller N. This is because `summarize_batch` chunks input
+over BART's ~1024-token limit and, when more than one chunk is produced, summarizes the chunk-summaries
+once more to keep the final brief a fixed length regardless of batch size (see `src/transformer_nlp.py`
+docstring) — that second compression pass can drop a theme a single-chunk summary would have kept. This
+is expected behavior for hierarchical/recursive summarization, not a new bug, but worth stating so a
+future test of this page isn't mistaken for a second unresolved issue.
+
+**Verification performed**: `pytest tests/ -v` — 31/31 passing; directly queried the warehouse to confirm
+the duplication root cause (30/46 unique) before writing any fix; re-ran `summarize_batch` on the deduped
+top-17 vs. top-46 lists and confirmed the two summaries now differ in genuinely new content rather than
+being coincidentally near-identical.

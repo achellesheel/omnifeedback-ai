@@ -29,10 +29,27 @@ if df.empty:
 
 st.subheader("Batch Executive Summary")
 n = st.slider("Number of most-critical feedback records to summarize", 5, 50, 15)
-critical_texts = df.sort_values("urgency_score", ascending=False)["raw_text"].head(n).tolist()
+
+# De-duplicate before slicing top-N. The synthetic generator draws critical feedback from
+# only ~8 template families (see scripts/generate_data.py), so the raw top-N by urgency
+# score is often mostly repeats of the same handful of sentences with different filler
+# words ("Been on hold for an hour/two hours/45 minutes...") — feeding BART 3-4 near-
+# duplicate copies wastes its limited context on redundant text instead of surfacing the
+# real diversity of complaint types, and previously made the summary barely change between
+# e.g. n=17 and n=46. Deduping first means the slider actually controls how much distinct
+# content BART sees.
+sorted_df = df.sort_values("urgency_score", ascending=False)
+deduped = sorted_df.drop_duplicates(subset="raw_text")
+critical_texts = deduped["raw_text"].head(n).tolist()
+n_available = len(deduped)
+st.caption(
+    f"{len(critical_texts)} distinct complaints selected (out of {n_available} unique critical texts "
+    f"available in this dataset — duplicates with different filler words are merged before summarizing)."
+)
 
 if st.button("Generate Executive Summary", type="primary"):
-    with st.spinner(f"Summarizing {n} critical feedback records with BART (first load can take ~30s)..."):
+    with st.spinner(f"Summarizing {len(critical_texts)} distinct critical feedback records with BART "
+                     f"(first load can take ~30s)..."):
         summary = summarize_batch(critical_texts)
     st.success("Executive Summary")
     st.write(summary)
