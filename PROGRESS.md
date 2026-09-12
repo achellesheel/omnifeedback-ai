@@ -594,3 +594,14 @@ production batch scale; updated the one user-facing caption that named the old m
 
 **Immediate mitigation given to the user**: reboot the app via Streamlit Cloud's dashboard to clear the
 already-overflowed memory while this fix deploys.
+
+**Follow-up**: shortly after, Streamlit Cloud separately throttled the app's CPU ("we've temporarily
+reduced its CPU to keep the platform healthy for everyone"), expiring at a stated time. This is a
+different mechanism from the memory error above — a free-tier CPU cap triggered by sustained heavy
+compute, not an error state — and is expected given this app runs 4 transformer-based models (BERT-NER,
+a summarizer, and V3's DistilBERT) with no GPU, compounded by a day of repeated redeploys and testing
+against the same free-tier instance. No code fix applies here; documented as an honest limitation of
+free-tier hosting for a project this compute-heavy, not glossed over. The model-size reduction above
+should help some (smaller models = fewer CPU-seconds per inference call), but a project like this
+genuinely strains what a free tier is designed for — see `docs/PRODUCTION_READINESS.md` for the paid-tier
+discussion this motivates.
