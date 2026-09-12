@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OmniFeedback AI — Project Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f4ef; --surface:#ffffff; --border:#dcd7c8;
+    --text:#1b2030; --text-dim:#5b6478; --accent:#c97c1b; --accent-2:#1e8f82;
+    --shadow: 0 1px 2px rgba(27,32,48,.06), 0 8px 24px rgba(27,32,48,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10141f; --surface:#171c2b; --border:#2b3348;
+      --text:#e7eaf3; --text-dim:#99a2bc; --accent:#f2a93b; --accent-2:#4fd1c5;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10141f; --surface:#171c2b; --border:#2b3348;
+    --text:#e7eaf3; --text-dim:#99a2bc; --accent:#f2a93b; --accent-2:#4fd1c5;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:"IBM Plex Sans",system-ui,sans-serif; padding:8vh 20px; min-height:100dvh;}
+  .wrap{max-width:760px; margin:0 auto;}
+  .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:8px; margin-bottom:14px;}
+  .eyebrow::before{content:""; width:16px; height:2px; background:var(--accent);}
+  h1{font-size:clamp(30px,5vw,44px); margin:0 0 12px; text-wrap:balance; letter-spacing:-0.01em;}
+  p.lead{color:var(--text-dim); font-size:16px; line-height:1.6; max-width:60ch; margin:0 0 36px;}
+  .links{display:flex; flex-direction:column; gap:12px;}
+  a.card{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:16px 20px; text-decoration:none; color:var(--text); box-shadow:var(--shadow);
+    transition:border-color .15s ease;
+  }
+  a.card:hover{border-color:var(--accent);}
+  a.card .t{font-weight:600; font-size:15px;}
+  a.card .d{color:var(--text-dim); font-size:13px; margin-top:3px;}
+  a.card .arrow{color:var(--accent); font-family:"IBM Plex Mono",monospace; flex-shrink:0;}
+  footer{margin-top:40px; font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--text-dim);}
+  footer a{color:var(--text-dim);}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">Project Hub</div>
+    <h1>OmniFeedback AI</h1>
+    <p class="lead">Enterprise feedback ingestion, escalation triage, and a GenAI resolution copilot —
+      with a live naive-vs-hardened overfitting demo built into the app.</p>
+    <div class="links">
+      <a class="card" href="slides/" target="_blank" rel="noopener">
+        <div><div class="t">📊 15-Slide Technical Walkthrough</div><div class="d">Architecture, algorithms, the V1/V2 story, and real data insights</div></div>
+        <span class="arrow">→</span>
+      </a>
+      <a class="card" href="https://omnifeedback-ai-c4mmclqnkgytms6vuzqtjp.streamlit.app/" target="_blank" rel="noopener">
+        <div><div class="t">🚀 Live Application</div><div class="d">The full running Streamlit dashboard</div></div>
+        <span class="arrow">→</span>
+      </a>
+      <a class="card" href="https://github.com/achellesheel/omnifeedback-ai" target="_blank" rel="noopener">
+        <div><div class="t">💻 GitHub Repository</div><div class="d">Full source code, tests, and Dockerfile</div></div>
+        <span class="arrow">→</span>
+      </a>
+      <a class="card" href="https://github.com/achellesheel/omnifeedback-ai/blob/main/docs/DATA_INSIGHTS.md" target="_blank" rel="noopener">
+        <div><div class="t">📈 Data Insights</div><div class="d">Confusion matrix, threshold sensitivity, error analysis</div></div>
+        <span class="arrow">→</span>
+      </a>
+      <a class="card" href="https://github.com/achellesheel/omnifeedback-ai/blob/main/docs/PRODUCT_REVIEW.md" target="_blank" rel="noopener">
+        <div><div class="t">🔍 Product Review</div><div class="d">QA findings, user journeys, business value</div></div>
+        <span class="arrow">→</span>
+      </a>
+      <a class="card" href="https://github.com/achellesheel/omnifeedback-ai/blob/main/docs/ENHANCEMENTS.md" target="_blank" rel="noopener">
+        <div><div class="t">🧭 Enhancement Roadmap</div><div class="d">What's next, ranked by cost vs. leverage</div></div>
+        <span class="arrow">→</span>
+      </a>
+      <a class="card" href="https://github.com/achellesheel/omnifeedback-ai/blob/main/PROGRESS.md" target="_blank" rel="noopener">
+        <div><div class="t">📓 Build Log</div><div class="d">Every bug, fix, and modeling decision, written as it happened</div></div>
+        <span class="arrow">→</span>
+      </a>
+    </div>
+    <footer>github.com/achellesheel/omnifeedback-ai</footer>
+  </div>
+</body>
+</html>
