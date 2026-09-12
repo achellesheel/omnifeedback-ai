@@ -153,6 +153,22 @@
 
   footer.slide-foot{position:absolute; bottom:78px; left:0; right:0; text-align:center; font-size:12px; color:var(--text-dim); font-family:"IBM Plex Mono",monospace;}
 
+  .draw-path{transition:stroke-dashoffset 1s ease;}
+  .bar-rect{transform-origin:bottom; transform:scaleY(0); transition:transform .7s cubic-bezier(.2,.8,.2,1);}
+  .bar-rect.grown{transform:scaleY(1);}
+  .fade-in{opacity:0; transform:translateY(6px); transition:opacity .5s ease, transform .5s ease;}
+  .fade-in.grown{opacity:1; transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){
+    .draw-path{transition:none !important;}
+    .bar-rect{transition:none !important; transform:scaleY(1) !important;}
+    .fade-in{transition:none !important; opacity:1 !important; transform:none !important;}
+  }
+  .mismatch-flow{display:flex; flex-direction:column; align-items:center; gap:10px; font-family:"IBM Plex Sans",sans-serif;}
+  .layer-row{display:flex; gap:5px; margin-bottom:8px;}
+  .layer-box{flex:1; text-align:center; font-size:10px; padding:8px 2px; border-radius:6px; border:1px solid var(--border); background:var(--surface);}
+  .layer-box.frozen{color:var(--text-dim);}
+  .layer-box.trainable{border-color:var(--accent); color:var(--accent); background:color-mix(in srgb, var(--accent) 10%, var(--surface));}
+
   @media (max-width:600px){
     .slide{padding:5vh 20px 14vh;}
     h2.slide-title{font-size:26px;}
@@ -166,7 +182,7 @@
   <!-- 1 -->
   <section class="slide">
     <div class="slide-inner" style="text-align:center;">
-      <div class="eyebrow" style="justify-content:center;">Technical Walkthrough — 15 slides</div>
+      <div class="eyebrow" style="justify-content:center;">Technical Walkthrough — 21 slides</div>
       <h1 style="font-size:clamp(40px,7vw,72px); margin-bottom:10px;">OmniFeedback&nbsp;AI</h1>
       <p class="lead" style="margin:0 auto 28px; text-align:center;">Enterprise feedback ingestion, escalation triage, and a GenAI resolution copilot —
         built with the overfitting fix made visible, live, instead of just claimed.</p>
@@ -255,7 +271,7 @@
         <div class="flow" style="justify-content:center;">
           <div class="flow-box accent">GenAI Resolution Copilot</div>
           <span class="flow-arrow">→</span>
-          <div class="flow-box">Streamlit Dashboard (V1/V2 toggle on every page)</div>
+          <div class="flow-box">Streamlit Dashboard (V1/V2/V3 toggle on every page)</div>
         </div>
       </div>
     </div>
@@ -365,6 +381,142 @@
   <!-- 9 -->
   <section class="slide">
     <div class="slide-inner">
+      <div class="eyebrow">V3 · A Second Bug, Found Live</div>
+      <h2 class="slide-title">A friend testing the app found what 27 passing tests couldn't</h2>
+      <div class="mismatch-flow">
+        <div class="flow-box" style="border:1px solid var(--critical); color:var(--critical); padding:10px 16px;">Same sentence, scored MEDIUM under V2</div>
+        <div style="color:var(--text-dim);">↓ switch model version, nothing else ↓</div>
+        <div class="flow-box accent" style="padding:10px 16px;">Correctly scored HIGH / CRITICAL under V3</div>
+      </div>
+      <p class="lead" style="margin-top:18px;">V2 scored an obviously-critical complaint ("crashes every time I check out,
+        I've switched to a competitor") almost identically to an obviously-positive one. Tests check code correctness —
+        not whether a model actually generalizes to language it never saw in training.</p>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Root Cause, Measured</div>
+      <h2 class="slide-title">196 words. That's V2's entire vocabulary.</h2>
+      <div class="grid-2">
+        <div class="card figure-inner" style="padding:16px;">
+          <div id="chart-oov"></div>
+          <div class="fig-cap" style="margin-top:8px; font-size:11px; color:var(--text-dim);">Out-of-vocabulary rate: template-matching text vs. real-world phrasing.</div>
+        </div>
+        <div>
+          <p class="lead">V2's BiLSTM learns its own embedding table from scratch — its vocabulary is exactly 196 words,
+            because the synthetic training templates are narrow. Tokenizing genuinely natural sentences showed
+            33–63% of words mapping to <span class="mono">&lt;UNK&gt;</span>. With over half a sentence invisible,
+            the model has almost nothing to work with — output collapses toward the training mean regardless of
+            true severity.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">The Fix</div>
+      <h2 class="slide-title">Don't learn English from scratch — fine-tune what already knows it</h2>
+      <div class="grid-2">
+        <div>
+          <p class="lead" style="margin-bottom:14px;">Same lesson from an unrelated image-classification project: fine-tuning
+            a slice of a pretrained model beat training a CNN from scratch by a wide margin. Applied here: fine-tune a
+            pretrained DistilBERT instead of training a BiLSTM's vocabulary from 4,000 rows.</p>
+          <div class="callout good">Subword tokenization means <strong>no closed-vocabulary problem at all</strong> —
+            any English word decomposes into known pieces.</div>
+        </div>
+        <div class="card" style="padding:16px;">
+          <div class="layer-row fade-in">
+            <div class="layer-box frozen">L0 🔒</div><div class="layer-box frozen">L1 🔒</div>
+            <div class="layer-box frozen">L2 🔒</div><div class="layer-box frozen">L3 🔒</div>
+            <div class="layer-box trainable">L4 🔓</div><div class="layer-box trainable">L5 🔓</div>
+          </div>
+          <div class="fbox accent fade-in" style="text-align:center;">+ Regression Head</div>
+          <div style="text-align:center; margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600; color:var(--good);">21.4%</div>
+          <div style="text-align:center; font-size:11px; color:var(--text-dim);">of 66.4M parameters trainable</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">The Proof</div>
+      <h2 class="slide-title">13× larger separation. Zero additional training data.</h2>
+      <div class="grid-2">
+        <div class="card figure-inner" style="padding:16px;">
+          <div id="chart-v2v3"></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="card stat-tile"><span class="label">Same synthetic test set — MSE</span><span class="val">V2: 0.0162 · V3: 0.0160</span></div>
+          <div class="card stat-tile"><span class="label">V2 critical−low separation (real sentences)</span><span class="val" style="color:var(--critical);">0.022</span></div>
+          <div class="card stat-tile"><span class="label">V3 critical−low separation (same sentences)</span><span class="val" style="color:var(--good);">0.298</span></div>
+        </div>
+      </div>
+      <p class="lead" style="margin-top:16px;">The standard test-set metrics look nearly identical — that's expected, since
+        that test set is drawn from the same narrow templates both models trained on. The real difference only shows up
+        on text neither model saw verbatim, which is exactly the point.</p>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Shipping It</div>
+      <h2 class="slide-title">The checkpoint was too big for GitHub</h2>
+      <div class="grid-2">
+        <div>
+          <div class="flow-box" style="border-color:var(--critical); color:var(--critical); text-align:left; padding:12px;">
+            265MB saved (full model state dict) — exceeds GitHub's 100MB hard limit
+          </div>
+          <div style="text-align:center; margin:10px 0; color:var(--text-dim);">↓</div>
+          <div class="flow-box accent" style="text-align:left; padding:12px;">
+            56MB — only the fine-tuned subset (last 2 layers + head); frozen backbone re-downloaded from HuggingFace at load time
+          </div>
+        </div>
+        <div>
+          <p class="lead">~79% of that 265MB was the frozen, unmodified DistilBERT backbone — identical to what
+            <span class="mono">AutoModel.from_pretrained()</span> already fetches fresh. Rather than reach for Git LFS,
+            saved only the parameters that actually changed and reconstructed the rest at load time.</p>
+          <div class="callout good">Verified byte-for-byte identical predictions before and after the change — a
+            storage fix, not a retrain.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Honest Boundary</div>
+      <h2 class="slide-title">Severe ≠ CRITICAL — and that's worth saying plainly</h2>
+      <div class="grid-2">
+        <div>
+          <p class="lead" style="margin-bottom:10px;">Tested ~20 real sentences directly against V3 to find what actually
+            crosses the 0.8 CRITICAL threshold. Two patterns reliably do:</p>
+          <table>
+            <tbody>
+              <tr><td class="num" style="color:var(--accent); font-weight:700;">0.860</td><td style="font-size:12.5px;">"deleted all data... fix immediately... unacceptable"</td></tr>
+              <tr><td class="num" style="color:var(--accent); font-weight:700;">0.808</td><td style="font-size:12.5px;">"unauthorized access... password changed... financial risk"</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout critical">A genuinely severe complaint outside those two patterns — e.g. "production down,
+          losing revenue every minute" — tops out around <strong>0.69–0.79 (HIGH)</strong>, not CRITICAL. The threshold
+          is calibrated to specific training patterns, not a general "how bad does this sound" scale. Expected behavior
+          for a model trained on a particular distribution — not a bug — but worth stating plainly rather than letting
+          a viewer assume otherwise.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 -->
+  <section class="slide">
+    <div class="slide-inner">
       <div class="eyebrow">Transformer NLP</div>
       <h2 class="slide-title">Entity extraction &amp; executive summarization</h2>
       <div class="grid-2">
@@ -388,7 +540,7 @@
     </div>
   </section>
 
-  <!-- 10 -->
+  <!-- 16 -->
   <section class="slide">
     <div class="slide-inner">
       <div class="eyebrow">GenAI Copilot</div>
@@ -414,7 +566,7 @@
     </div>
   </section>
 
-  <!-- 11 -->
+  <!-- 17 -->
   <section class="slide">
     <div class="slide-inner">
       <div class="eyebrow">Data Insights I</div>
@@ -431,7 +583,7 @@
     </div>
   </section>
 
-  <!-- 12 -->
+  <!-- 18 -->
   <section class="slide">
     <div class="slide-inner">
       <div class="eyebrow">Data Insights II</div>
@@ -451,7 +603,7 @@
     </div>
   </section>
 
-  <!-- 13 -->
+  <!-- 19 -->
   <section class="slide">
     <div class="slide-inner">
       <div class="eyebrow">QA &amp; Business Value</div>
@@ -469,7 +621,7 @@
     </div>
   </section>
 
-  <!-- 14 -->
+  <!-- 20 -->
   <section class="slide">
     <div class="slide-inner">
       <div class="eyebrow">Enhancement Roadmap</div>
@@ -491,13 +643,14 @@
     </div>
   </section>
 
-  <!-- 15 -->
+  <!-- 21 -->
   <section class="slide">
     <div class="slide-inner" style="text-align:center;">
       <div class="eyebrow" style="justify-content:center;">Closing</div>
-      <h2 class="slide-title">Built, tested, deployed — documented every step</h2>
-      <p class="lead" style="margin:0 auto 22px; text-align:center;">25 passing tests · live Streamlit deployment · Dockerfile verified ·
-        full build log in PROGRESS.md · data insights, product review, and roadmap in /docs.</p>
+      <h2 class="slide-title">Built, tested, deployed — two real bugs found and fixed, not edited out</h2>
+      <p class="lead" style="margin:0 auto 22px; text-align:center;">31 passing tests · V1→V2→V3 model evolution, live and toggleable ·
+        live Streamlit deployment · Dockerfile verified · full build log in PROGRESS.md · data insights,
+        product review, and roadmap in /docs.</p>
       <div class="badge-row" style="justify-content:center;">
         <span class="badge">scikit-learn</span><span class="badge">SciPy</span><span class="badge">Plotly</span>
         <span class="badge">pytest</span><span class="badge">Docker</span>
@@ -543,6 +696,25 @@
     counterEl.textContent = (idx+1) + ' / ' + total;
     prevBtn.disabled = idx===0;
     nextBtn.disabled = idx===total-1;
+    revealAnimations();
+  }
+
+  function revealAnimations(){
+    var active = slides[idx];
+    if (!active) return;
+    active.querySelectorAll('.draw-path').forEach(function(p){
+      if (p.dataset.revealed) return;
+      p.dataset.revealed = '1';
+      var len = p.getTotalLength();
+      p.style.strokeDasharray = len;
+      p.style.strokeDashoffset = len;
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ p.style.strokeDashoffset = 0; }); });
+    });
+    active.querySelectorAll('.bar-rect, .fade-in').forEach(function(el, i){
+      if (el.dataset.revealed) return;
+      el.dataset.revealed = '1';
+      setTimeout(function(){ el.classList.add('grown'); }, 60 * i);
+    });
   }
   function go(n){ idx = Math.max(0, Math.min(total-1, n)); render(); }
 
@@ -587,8 +759,8 @@
     ks.forEach(function(k,i){
       if (i%2===0){ svg += '<text x="'+x(i).toFixed(1)+'" y="'+(h-8)+'" font-size="9" text-anchor="middle">'+k+'</text>'; }
     });
-    svg += '<path d="'+pathOf(seriesA)+'" fill="none" stroke="'+colorA+'" stroke-width="2"/>';
-    svg += '<path d="'+pathOf(seriesB)+'" fill="none" stroke="'+colorB+'" stroke-width="2.5"/>';
+    svg += '<path class="draw-path" d="'+pathOf(seriesA)+'" fill="none" stroke="'+colorA+'" stroke-width="2"/>';
+    svg += '<path class="draw-path" d="'+pathOf(seriesB)+'" fill="none" stroke="'+colorB+'" stroke-width="2.5"/>';
     seriesA.forEach(function(v,i){ svg += '<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="2.5" fill="'+colorA+'"/>'; });
     seriesB.forEach(function(v,i){ svg += '<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="2.5" fill="'+colorB+'"/>'; });
     svg += '</svg>';
@@ -621,6 +793,50 @@
     }
     document.getElementById('chart-confusion').innerHTML = html;
   })();
+
+  // --- Chart 3: OOV rate bar chart (template match vs real-world sentences) ---
+  (function(){
+    var bars = [
+      {label:'Template match', v:0, color:getComputedStyle(document.documentElement).getPropertyValue('--good').trim() || '#2e7d53'},
+      {label:'Real critical', v:55, color:getComputedStyle(document.documentElement).getPropertyValue('--critical').trim() || '#c4433f'},
+      {label:'Real positive', v:42, color:getComputedStyle(document.documentElement).getPropertyValue('--critical').trim() || '#c4433f'},
+    ];
+    var w=340, h=160, padB=24, padT=10, barW=60, gap=30;
+    var innerH = h-padB-padT, maxV=70;
+    var svg = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img" aria-label="Out-of-vocabulary rate chart">';
+    bars.forEach(function(b,i){
+      var bx = 15 + i*(barW+gap);
+      var bh = (b.v/maxV)*innerH;
+      svg += '<g class="bar-rect"><rect x="'+bx+'" y="'+(h-padB-bh).toFixed(1)+'" width="'+barW+'" height="'+bh.toFixed(1)+'" rx="4" fill="'+b.color+'"/></g>';
+      svg += '<text x="'+(bx+barW/2)+'" y="'+(h-padB-bh-6).toFixed(1)+'" font-size="11" text-anchor="middle" font-weight="600">'+b.v+'%</text>';
+      svg += '<text x="'+(bx+barW/2)+'" y="'+(h-6)+'" font-size="9" text-anchor="middle">'+b.label+'</text>';
+    });
+    svg += '</svg>';
+    document.getElementById('chart-oov').innerHTML = svg;
+  })();
+
+  // --- Chart 4: V2 vs V3 critical/low separation, grouped bars ---
+  (function(){
+    var groups = [{label:'Critical mean', v2:0.44, v3:0.60}, {label:'Low mean', v2:0.42, v3:0.30}, {label:'Separation', v2:0.02, v3:0.30}];
+    var colorV2 = getComputedStyle(document.documentElement).getPropertyValue('--critical').trim() || '#c4433f';
+    var colorV3 = getComputedStyle(document.documentElement).getPropertyValue('--good').trim() || '#2e7d53';
+    var w=340, h=170, padB=26, padT=10, groupW=100, barW=32;
+    var innerH = h-padB-padT, maxV=0.7;
+    var svg = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img" aria-label="V2 vs V3 comparison chart">';
+    groups.forEach(function(g,i){
+      var gx = 12 + i*groupW;
+      var h2 = (g.v2/maxV)*innerH, h3 = (g.v3/maxV)*innerH;
+      svg += '<g class="bar-rect"><rect x="'+gx+'" y="'+(h-padB-h2).toFixed(1)+'" width="'+barW+'" height="'+h2.toFixed(1)+'" rx="3" fill="'+colorV2+'"/></g>';
+      svg += '<g class="bar-rect"><rect x="'+(gx+barW+4)+'" y="'+(h-padB-h3).toFixed(1)+'" width="'+barW+'" height="'+h3.toFixed(1)+'" rx="3" fill="'+colorV3+'"/></g>';
+      svg += '<text x="'+(gx+barW+2)+'" y="'+(h-8)+'" font-size="8.5" text-anchor="middle">'+g.label+'</text>';
+    });
+    svg += '</svg>';
+    svg += '<div style="display:flex; gap:14px; margin-top:6px; font-size:11px;">' +
+      '<span style="color:'+colorV2+'">● V2 (BiLSTM)</span><span style="color:'+colorV3+'">● V3 (DistilBERT)</span></div>';
+    document.getElementById('chart-v2v3').innerHTML = svg;
+  })();
+
+  revealAnimations(); // trigger for slide 1 (already active before charts existed)
 })();
 </script>
 </body>

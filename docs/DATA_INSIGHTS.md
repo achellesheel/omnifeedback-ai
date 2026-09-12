@@ -85,7 +85,31 @@ alternative hypothesis to detect instead of testing against manufactured randomn
 `aspect_category` — the metadata field simply isn't correlated with the text, so there's no aspect signal
 for TF-IDF clustering to recover even if it wanted to.
 
-## 6. What this means for the product
+## 6. V3: the same limitation, measured — and where it draws the line
+
+Milestone 8 (`PROGRESS.md`) found that V2's from-scratch, 196-word BiLSTM vocabulary collapsed real-world
+critical and positive feedback to nearly identical scores (0.02 separation). V3 (a transfer-learned
+DistilBERT, frozen early layers, ~21% of parameters trainable) fixed this — 0.30 separation on the same
+sentences, ~13x larger, with no more training data than V2 had.
+
+**But V3's CRITICAL threshold (≥0.8) is narrower than "how bad this sounds."** Testing ~20 real-world
+severity statements directly against the model found that genuinely severe complaints ("production API
+down for 45 minutes, losing revenue every minute") reliably reach HIGH (0.56–0.79) but not CRITICAL.
+Only two phrasing patterns reliably cross 0.8:
+
+| Pattern | Example | Score |
+|---|---|---|
+| Data deletion + demand for immediate fix + "unacceptable" | "Your platform deleted all of my account data without any warning, I need this fixed immediately, this is completely unacceptable." | 0.860 |
+| Unauthorized account access + password change + financial data at risk | "Someone accessed my account without my permission and changed my password, I am now completely locked out and my financial data is at serious risk." | 0.808 |
+
+Both map closely to a specific template family in V2's hardened training data ("Your {product} deleted
+all my data without warning, I need this fixed NOW."). This is expected behavior for a model calibrated
+to its training distribution, not a bug — but it means the 0.8 cutoff should be read as "matches the
+data-loss/account-compromise pattern strongly," not "the model agrees this is maximally severe." Training
+on genuinely diverse real complaint text (the Yelp/Sentiment140 samples already fetched in
+`scripts/fetch_real_datasets.py`, not yet used for training) would likely broaden what reaches CRITICAL.
+
+## 7. What this means for the product
 
 - The 0.5 threshold is a reasonable default; no urgent need to recalibrate before a pilot deployment.
 - Expect roughly **1 in 4 critical alerts to be a false alarm** and **roughly 1 in 5 real crises to be

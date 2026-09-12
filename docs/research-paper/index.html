@@ -107,15 +107,18 @@
   <div class="abstract">
     <div class="label">Abstract</div>
     <p>We present OmniFeedback AI, a feedback-triage system combining a transactional warehouse, K-Means
-    aspect clustering, a BiLSTM urgency regressor, transformer-based NER/summarization, and a
-    prompt-engineered GenAI copilot. An initial synthetic corpus yielded suspiciously perfect metrics
-    (F1=1.000, silhouette=1.000) — an artifact of just 9 unique training sentences, not model competence.
-    We detail two fixes: (1) a hardened generator adding phrase composition, boundary-case ambiguity, and
-    label noise, and (2) a Kneedle-based elbow method replacing naive silhouette-maximizing K-selection,
-    necessary because templated text produces silhouette curves that never plateau. We report full
-    before/after metrics, an error analysis separating genuine model failure from injected noise, and a
-    null channel–urgency association (p=0.84) traced to generator design rather than a modeling failure.
-    Both configurations remain live and independently reproducible.</p>
+    clustering, an urgency regressor, transformer NER/summarization, and a GenAI copilot. We document two
+    sequential post-deployment corrections. V1→V2: an initial corpus yielded suspiciously perfect metrics
+    (F1=1.000, silhouette=1.000) — an artifact of 9 unique training sentences, not competence — fixed with a
+    hardened generator and a Kneedle elbow method replacing naive silhouette-maximizing K-selection. V2→V3:
+    a user of the deployed app found the resulting BiLSTM scoring natural critical and positive feedback
+    almost identically; we trace this to a 196-word from-scratch vocabulary (42–55% OOV on natural text) and
+    correct it via partial transfer learning — a fine-tuned DistilBERT, 21.4% of parameters trainable —
+    yielding a ~13× larger critical-vs-low score separation with no additional data. We report full
+    before/after metrics for both fixes, an error analysis, a null channel–urgency result (p=0.84) traced to
+    generator design, a checkpoint-size engineering note, and an explicit characterization of what the
+    corrected model's CRITICAL threshold actually detects. All three configurations remain live and
+    independently reproducible.</p>
   </div>
 
   <div class="paper-body">
@@ -135,9 +138,11 @@
     silhouette coefficient <span class="dim">[3]</span>; the Kneedle algorithm <span class="dim">[4]</span>
     formalizes elbow detection as maximum distance from the chord joining a curve's endpoints — applied
     here to a "higher is better" metric rather than its original inertia framing. NER and summarization use
-    BERT <span class="dim">[5]</span> and BART <span class="dim">[6]</span>; the copilot draws on
-    chain-of-thought <span class="dim">[7]</span> and few-shot prompting <span class="dim">[8]</span>,
-    optimized with Adam <span class="dim">[9]</span>.</p>
+    BERT <span class="dim">[5]</span> and BART <span class="dim">[6]</span>; Section 6's transfer-learning
+    correction fine-tunes DistilBERT <span class="dim">[7]</span>, a distilled encoder retaining most of
+    BERT's language understanding at a fraction of its parameter count. The copilot draws on
+    chain-of-thought <span class="dim">[8]</span> and few-shot prompting <span class="dim">[9]</span>,
+    optimized with Adam <span class="dim">[10]</span>.</p>
 
     <h2><span class="num">3</span>System Architecture</h2>
     <div class="figure">
@@ -233,31 +238,98 @@
     near-optimal. Predicted/true urgency correlation: <span class="mono">r=0.869</span>. Channel–urgency
     independence: <span class="mono">χ²=4.18, p=0.840</span> (8 d.f.) — not significant.</p>
 
-    <h2><span class="num">6</span>Discussion</h2>
-    <h3>6.1 Error composition</h3>
+    <h2><span class="num">6</span>V3: A Transfer-Learning Correction</h2>
+    <p>Post-deployment, a person testing the live application (not any automated test) found that V2 scored
+    natural-language critical and positive feedback almost identically whenever phrasing diverged from the
+    training templates. This section documents the diagnosis and fix as a second, independent case study
+    in the same spirit as Section 4.2's elbow-selection correction: a suspicious result, investigated to a
+    measurable root cause, fixed, and verified — this time a generalization failure rather than a
+    data-construction artifact.</p>
+
+    <h3>6.1 Diagnosis: a 196-word closed vocabulary</h3>
+    <div class="figure">
+      <div class="figure-inner">
+        <div id="fig6"></div>
+        <div class="fig-cap"><b>Figure 6.</b> Out-of-vocabulary rate: text matching V2's training templates
+        vs. natural-language critical/positive sentences. At 42–55% OOV, roughly half of each sentence is
+        invisible to a model whose vocabulary was learned entirely from ~2,800 training rows.</div>
+      </div>
+    </div>
+    <p>V2's BiLSTM (§4.3) learns its embedding table from scratch; its vocabulary — words occurring ≥2 times
+    in the training split — is 196 tokens. Tokenizing natural stress-test sentences against it showed
+    42–55% out-of-vocabulary. With roughly half the input mapped to a single <span class="mono">&lt;UNK&gt;</span>
+    token, the model retains little signal and its output regresses toward the training mean irrespective
+    of true severity.</p>
+
+    <h3>6.2 Correction: partial transfer learning</h3>
+    <p>We replace the from-scratch embedding with a fine-tuned <span class="mono">distilbert-base-uncased</span>
+    encoder, freezing the embeddings and first 4 of 6 transformer layers and training only the last 2 layers
+    plus a linear regression head — <b>21.4% of parameters trainable</b> (14.2M / 66.4M), deliberately mirroring
+    a partial-fine-tuning ratio observed to outperform from-scratch training in an unrelated image-classification
+    task. Subword tokenization eliminates the closed-vocabulary failure mode entirely: any English string
+    decomposes into known subword units regardless of training-corpus coverage.</p>
+
+    <h3>6.3 Results: unchanged in-distribution, corrected out-of-distribution</h3>
+    <div class="figure">
+      <div class="figure-inner">
+        <div id="fig7"></div>
+        <div class="fig-cap"><b>Figure 7.</b> Mean urgency score by expected severity, V2 vs. V3, on the same
+        8 out-of-distribution sentences. V2's critical/low separation (0.022) is statistically indistinguishable
+        from noise; V3's (0.298) is not — a ~13× increase with no additional training data.</div>
+      </div>
+    </div>
+    <p>On the held-out synthetic test split, V2 and V3 are comparable (MSE 0.0162 vs. 0.0160; macro-F1 0.821 vs.
+    0.825) — expected, since that split is drawn from the same template family both models trained on and
+    cannot itself reveal an out-of-distribution generalization gap. On 8 natural-language sentences
+    constructed to fall outside those templates, V2's critical-minus-low mean-score separation is 0.022; V3's
+    is 0.298 — a difference this large is the finding, not the in-distribution parity above.</p>
+
+    <h3>6.4 An engineering note: checkpoint size</h3>
+    <p>The naively-saved full model checkpoint is 265MB, exceeding GitHub's 100MB per-file limit. Since ~79%
+    of that size is the frozen, unmodified pretrained backbone — recoverable at load time via the same
+    <span class="mono">from_pretrained()</span> call already used for this project's NER/summarization
+    components — we persist only the fine-tuned parameter subset (56.7MB) and reconstruct the frozen weights
+    on load, verified to reproduce bit-identical predictions to the full checkpoint before adopting the change.</p>
+
+    <h3>6.5 Honest boundary: what the CRITICAL threshold actually detects</h3>
+    <p>Testing ~20 additional natural-language sentences against V3 found its <span class="mono">≥0.8</span>
+    CRITICAL threshold is not a general severity scale: sentences describing severe operational impact alone
+    (e.g., extended production downtime with revenue loss) reliably score 0.69–0.79 (HIGH) without crossing
+    0.8. Two patterns reliably do: data-deletion-plus-immediate-fix-demand phrasing (0.86) and
+    unauthorized-account-access-plus-financial-risk phrasing (0.81) — both closely matching specific template
+    families in V2's training data that V3 inherited via its training labels. This is expected behavior for a
+    threshold calibrated to a training distribution, not a defect, but it is a genuine limit on what "CRITICAL"
+    means in this system that we state explicitly rather than leave for a user to discover unassisted.</p>
+
+    <h2><span class="num">7</span>Discussion</h2>
+    <h3>7.1 Error composition</h3>
     <p>V2 false negatives cluster almost entirely in the deliberately-ambiguous class (target
     0.35–0.6) — a boundary miss, not a comprehension failure. One false positive traces directly to the
     label-noise injection on a canonically critical sentence, meaning the model was semantically correct
     against a deliberately corrupted target.</p>
-    <h3>6.2 A metric-mismatch pitfall</h3>
+    <h3>7.2 A metric-mismatch pitfall</h3>
     <p>An initial threshold sweep optimized <span class="mono">precision_recall_curve</span>'s
     positive-class F1, not the macro-F1 used elsewhere — yielding a "best" threshold that scored
     <i>worse</i> than the shipped default, a logical contradiction that only became visible because the
     numbers didn't add up.</p>
-    <h3>6.3 Independence as a data limitation</h3>
+    <h3>7.3 Independence as a data limitation</h3>
     <p>The null channel result reflects the generator's independent metadata assignment, not evidence that
     channel is generally uninformative — a distinction worth stating plainly rather than treating a
     synthetic design choice as a finding about the world.</p>
 
-    <h2><span class="num">7</span>Limitations</h2>
+    <h2><span class="num">8</span>Limitations</h2>
     <p>All results concern template-generated text; real Yelp/Sentiment140 samples were validated as
-    loadable but not yet run through this methodology. The copilot's local fallback is rule-based, not
-    learned, and untested here against its optional Claude-backed path.</p>
+    loadable but not yet run through this methodology, and would plausibly broaden V3's CRITICAL threshold
+    beyond the two narrow patterns identified in §6.5. The copilot's local fallback is rule-based, not
+    learned, and untested here against its optional Claude-backed path. V3 corrects the urgency regressor
+    only; the TF-IDF-based clustering and baseline classifiers retain the same closed-vocabulary property
+    that motivated this section and have not yet received an equivalent correction.</p>
 
-    <h2><span class="num">8</span>Conclusion</h2>
-    <p>We documented a full diagnostic cycle — suspicious metrics, root-cause identification, and two
-    verifiable fixes — inside a deployed system where both configurations stay live specifically so
-    Table 1 is reproducible, not asserted.</p>
+    <h2><span class="num">9</span>Conclusion</h2>
+    <p>We documented two sequential diagnostic cycles — suspicious metrics traced to a data-construction
+    artifact, and a live-deployment failure traced to a closed-vocabulary generalization gap — each
+    resolved with a verifiable, measured fix inside a system where all three configurations stay live
+    specifically so every table and figure here is reproducible, not asserted.</p>
   </div>
 
   <h2 style="margin-top:24px;">References</h2>
@@ -268,6 +340,7 @@
     <li>Satopaa et al. (2011). Finding a "kneedle" in a haystack. <i>ICDCS Workshops.</i></li>
     <li>Devlin et al. (2019). BERT: pre-training of deep bidirectional transformers. <i>NAACL-HLT.</i></li>
     <li>Lewis et al. (2020). BART: denoising seq2seq pre-training. <i>ACL.</i></li>
+    <li>Sanh et al. (2019). DistilBERT, a distilled version of BERT. <i>NeurIPS EMC² Workshop.</i></li>
     <li>Wei et al. (2022). Chain-of-thought prompting. <i>NeurIPS.</i></li>
     <li>Brown et al. (2020). Language models are few-shot learners. <i>NeurIPS.</i></li>
     <li>Kingma &amp; Ba (2015). Adam: a method for stochastic optimization. <i>ICLR.</i></li>
@@ -384,6 +457,37 @@
   var fig5Paths = lineChart(fig5, [
     {data:THRESH_F1, color:C_ACCENT, label:'macro-F1'}
   ], THRESH.map(function(t){return t.toFixed(2);}), {minY:0.2, maxY:0.9, markIdx:7, markSeries:THRESH_F1});
+
+  function singleBar(container, bars, maxV){
+    var w=380, h=170, padB=22, padT=8, barW=70, gap=24;
+    var innerH=h-padB-padT;
+    var svg='<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img">';
+    bars.forEach(function(b,i){
+      var bx=18+i*(barW+gap);
+      var bh=(b.v/maxV)*innerH;
+      svg += '<g class="bar-rect" style="transform-box:fill-box;"><rect x="'+bx+'" y="'+(h-padB-bh).toFixed(1)+'" width="'+barW+'" height="'+bh.toFixed(1)+'" rx="4" fill="'+b.color+'"/></g>';
+      svg += '<text x="'+(bx+barW/2)+'" y="'+(h-padB-bh-6).toFixed(1)+'" text-anchor="middle" font-weight="600">'+b.v+'%</text>';
+      svg += '<text x="'+(bx+barW/2)+'" y="'+(h-6)+'" text-anchor="middle" font-size="8.5">'+b.label+'</text>';
+    });
+    svg += '</svg>';
+    container.innerHTML = svg;
+  }
+
+  // Fig 6: OOV rate — template match vs. real-world sentences
+  var fig6 = document.getElementById('fig6');
+  singleBar(fig6, [
+    {label:'Template match', v:0, color:C_GOOD},
+    {label:'Real critical', v:55, color:C_CRIT},
+    {label:'Real positive', v:42, color:C_CRIT},
+  ], 70);
+
+  // Fig 7: V2 vs V3 critical/low separation on real-world sentences
+  var fig7 = document.getElementById('fig7');
+  groupedBar(fig7, [
+    {label:'Critical mean', a:0.44, b:0.60},
+    {label:'Low mean', a:0.42, b:0.30},
+    {label:'Separation', a:0.02, b:0.30},
+  ], C_CRIT, C_GOOD, 'V2 (BiLSTM)', 'V3 (DistilBERT)');
 
   // ---- draw-in animation setup for line paths ----
   function prepDraw(ids){

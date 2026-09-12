@@ -103,9 +103,9 @@
       <ol>
         <li>Opens Model Comparison first — it's page 0</li>
         <li>Sees V1 hit F1=1.0, sees why that's a red flag, not a win</li>
-        <li>Verifies the claim themselves in under a minute</li>
+        <li>Scrolls to the V2-vs-V3 section, sees the real 13× separation gap on real-world sentences</li>
       </ol>
-      <div class="friction">This journey is the strongest single feature for a skeptical audience.</div>
+      <div class="friction">This journey is the strongest single feature for a skeptical audience — it now covers two independent, verifiable fixes, not one.</div>
     </div>
   </div>
 
@@ -122,6 +122,9 @@
       <tr><td>No exportable report snapshot for Executive Overview</td><td><span class="pill sev-low">Low</span></td><td><span class="pill accent">Open</span></td></tr>
       <tr><td>NER/BART cold-start ~95s combined on first use</td><td><span class="pill sev-low">Low</span></td><td><span class="pill accent">Open (UX, not correctness)</span></td></tr>
       <tr><td>GenAI local backend is keyword-pattern-based, not learned</td><td><span class="pill sev-med">Medium</span></td><td><span class="pill good">By design</span></td></tr>
+      <tr><td>V2's from-scratch 196-word vocabulary scored real critical/positive feedback almost identically — found by a person testing the live app, not by any test</td><td><span class="pill sev-high">High</span></td><td><span class="pill good">Fixed (V3)</span></td></tr>
+      <tr><td>V3's initial checkpoint (265MB) exceeded GitHub's 100MB per-file limit</td><td><span class="pill sev-med">Medium</span></td><td><span class="pill good">Fixed</span></td></tr>
+      <tr><td>V3's CRITICAL threshold (≥0.8) only reliably triggers on two narrow patterns (data loss, account compromise) — a severe outage complaint alone tops out at HIGH</td><td><span class="pill sev-med">Medium</span></td><td><span class="pill accent">Open (by design, stated plainly)</span></td></tr>
     </tbody>
   </table>
 
@@ -129,7 +132,11 @@
   <div class="value-grid">
     <div class="value-row">
       <div class="claim">Crisis detection speed</div>
-      <div class="note">BiLSTM scores a ticket in well under 350ms; catches ~80% of true critical tickets at the deployed 0.5 threshold (real confusion-matrix number, not a marketing claim of near-100%).</div>
+      <div class="note">Urgency scored in well under 350ms; catches ~80% of true critical tickets at the deployed 0.5 threshold (real confusion-matrix number, not a marketing claim of near-100%).</div>
+    </div>
+    <div class="value-row">
+      <div class="claim">Generalization to real customer language (V3)</div>
+      <div class="note">V2's from-scratch BiLSTM scored real-world critical and positive feedback almost identically (0.02 separation) whenever phrasing left its narrow training templates — found live, not in a test. V3 (transfer-learned DistilBERT, ~21% of parameters retrained) raised that separation to 0.30, ~13× larger, with zero additional training data. This is the difference between a demo that only works on cherry-picked examples and one that holds up under real scrutiny.</div>
     </div>
     <div class="value-row">
       <div class="claim">Clustering for roadmap prioritization</div>
@@ -145,10 +152,13 @@
     </div>
   </div>
 
-  <div class="callout">The platform is credible to demo today, with two caveats a presenter should state
+  <div class="callout">The platform is credible to demo today, with three caveats a presenter should state
     proactively: (1) clustering/channel findings are currently constrained by synthetic-data design, not
-    model capability, and (2) the GenAI local backend is intentionally simple by design, not a limitation
-    to hide — its value is the zero-cost default and clean upgrade path.</div>
+    model capability; (2) the GenAI local backend is intentionally simple by design, not a limitation to
+    hide — its value is the zero-cost default and clean upgrade path; and (3) V3's CRITICAL threshold is
+    calibrated to two specific training patterns (data loss, account compromise), not a general "how bad
+    does this sound" scale — a severe complaint outside those patterns will land HIGH, which is expected
+    behavior, not a defect, but worth saying before a reviewer discovers the boundary themselves.</div>
 
   <footer>
     <span>github.com/achellesheel/omnifeedback-ai</span>

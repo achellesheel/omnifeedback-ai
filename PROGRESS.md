@@ -343,6 +343,49 @@ still boots cleanly with no tracebacks after the page rewrites.
 classifiers still use TF-IDF (also vocabulary-limited in the same way) — flagged as the natural next
 target in `docs/ENHANCEMENTS.md`'s existing "OpenAI embeddings for semantic clustering" item, not yet done.
 
+## 2026-09-13 — Milestone 9: GitHub push warning, and finding V3's actual CRITICAL threshold
+
+**GitHub upload issue**: the first V3 checkpoint saved the model's *full* state dict — 265MB — because
+`torch.save(model.state_dict(), ...)` persists every parameter regardless of `requires_grad`. GitHub's
+hard per-file limit is 100MB; this would have needed Git LFS for no real benefit, since ~78% of that
+265MB is the *frozen*, unmodified DistilBERT backbone — identical to what `AutoModel.from_pretrained()`
+already downloads fresh at load time (the same pattern this project already uses for BERT NER/BART).
+**Fix**: added `TransformerUrgencyRegressor.trainable_state_dict()`, which filters the state dict down to
+only the parameters with `requires_grad=True` (the last 2 of 6 transformer layers + the regression head),
+and changed `load_transformer_regressor()` to reconstruct the frozen backbone via `from_pretrained()` and
+overlay the slim checkpoint with `load_state_dict(..., strict=False)`. Result: 56.7MB, safely under
+GitHub's limit — verified byte-for-byte identical predictions on the same test sentences before and after
+the change, so this was a storage optimization, not a retrain. `git push` still printed GitHub's 50MB
+*recommended* (not hard) limit warning, which is expected and harmless at 54MB.
+
+**Finding V3's actual CRITICAL threshold, empirically**: the stress-test sentences from Milestone 8 all
+scored HIGH (0.56–0.79) on V3, not CRITICAL (≥0.8) — genuinely severe complaints, but not crossing the
+top threshold. Rather than guess why, tested ~20 more real-world-style sentences directly against the
+model. Two phrasings reliably cross 0.8:
+
+| Score | Statement |
+|---|---|
+| 0.860 | "Your platform deleted all of my account data without any warning, I need this fixed immediately, this is completely unacceptable." |
+| 0.847 | "Your system deleted all of my customer records without any warning, I need this fixed immediately, this is completely unacceptable and has put my entire business at risk." |
+| 0.828 | "Your app deleted all of my data without any warning, I need this fixed right now, this is completely unacceptable and has put my business at serious risk." |
+| 0.808 | "Someone accessed my account without my permission and changed my password, I am now completely locked out and my financial data is at serious risk." |
+| 0.803 | "Someone accessed my account without permission and changed my password, I am locked out of everything and there is sensitive financial data at risk." |
+
+**Pattern identified**: (1) *data deletion + demand for an immediate fix + "unacceptable"* language, and
+(2) *unauthorized account access + password change + financial data at risk* — both map closely to a
+specific training-template pattern in V2's hardened dataset ("Your {product} deleted all my data without
+warning, I need this fixed NOW."). Severity alone (e.g., "production API down for 45 minutes, losing
+revenue") reliably reaches HIGH but not CRITICAL.
+
+**Honest caveat, stated plainly**: V3's CRITICAL threshold is calibrated to a fairly narrow severity
+pattern learned from the training data's specific template families (data loss, account compromise) —
+not a general "how bad does this sound" scale. A genuinely severe outage complaint that doesn't match
+that narrower pattern will land HIGH, not CRITICAL. This is not a bug — thresholds calibrated to training
+distribution are expected behavior — but it is a real limitation worth stating to anyone evaluating the
+0.8 cutoff as if it meant "the model agrees this is as bad as it gets." Flagged as a concrete input for
+`docs/ENHANCEMENTS.md`'s real-dataset validation item: training on genuinely diverse real complaint data
+(not just V2's template families) would likely broaden what triggers CRITICAL beyond these two patterns.
+
 ## 2026-09-13 — Milestone 6: Data insights, QA/PM review, roadmap, and a 15-slide deck (Steps 6–9)
 
 Moved past the core build into the analysis/presentation phase requested next.

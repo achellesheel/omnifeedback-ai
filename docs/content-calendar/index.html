@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OmniFeedback AI — 21-Day Content Calendar</title>
+<title>OmniFeedback AI — 31-Day Content Calendar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&display=swap" rel="stylesheet">
@@ -315,6 +315,32 @@ function bugDiagram(){
 function statBig(value, tag, color){
   return '<div class="stat-huge" style="color:'+color+';">'+value+'</div><div class="stat-tag">'+tag+'</div>';
 }
+function mismatchBox(expected, got){
+  return '<div style="display:flex; flex-direction:column; gap:8px; align-items:center;">' +
+    '<div class="fbox" style="border-color:#e2635f; color:#e2635f;">Expected: '+expected+'</div>' +
+    '<div class="farrow">but got</div>' +
+    '<div class="fbox" style="border-color:#e2635f; color:#e2635f; font-weight:700;">'+got+' ✕</div>' +
+  '</div>';
+}
+function frozenLayersDiagram(nFrozen, nTotal, trainablePct){
+  var boxes = '';
+  for (var i=0;i<nTotal;i++){
+    var frozen = i < nFrozen;
+    boxes += '<div class="fbox'+(frozen?'':' accent')+'" style="flex:1; font-size:9px; padding:6px 2px;">L'+i+(frozen?' 🔒':' 🔓')+'</div>';
+  }
+  return '<div style="display:flex; flex-direction:column; gap:8px;">' +
+    '<div style="display:flex; gap:4px;">'+boxes+'</div>' +
+    '<div class="fbox accent" style="text-align:center;">+ Regression Head</div>' +
+    '<div class="stat-tag">'+trainablePct+'% of parameters trainable</div>' +
+  '</div>';
+}
+function patternList(items){
+  return '<div style="display:flex; flex-direction:column; gap:8px;">' + items.map(function(it){
+    return '<div style="display:flex; align-items:center; gap:8px;">' +
+      '<span class="mono" style="background:#f2a93b; color:#1b2030; padding:2px 7px; border-radius:6px; font-size:11px; font-weight:700; flex-shrink:0;">'+it.score+'</span>' +
+      '<span style="font-size:11px;">'+it.label+'</span></div>';
+  }).join('') + '</div>';
+}
 
 // ---------- per-day visuals ----------
 var VISUALS = [
@@ -345,14 +371,32 @@ var VISUALS = [
       {g:'📊', l:'Product Manager', d:'Trends → clusters → stats page'},
       {g:'🔍', l:'Technical Reviewer', d:'Model Comparison → verify claims'}
     ]); },
-  function(){ return checklistGrid(['Live Streamlit app','GitHub repo, 25 tests','15-slide deck','Data insights','Working paper']); }
+  function(){ return mismatchBox('CRITICAL', 'MEDIUM'); },
+  function(){ return barChart([{label:'Template match',v:0,color:'#56c08a'},{label:'Real critical',v:55,color:'#e2635f'},{label:'Real positive',v:42,color:'#e2635f'}], 70); },
+  function(){ return flowV([{label:'Pretrained DistilBERT (66M params)'},{label:'Freeze embeddings + first 4 layers'},{label:'Fine-tune last 2 layers + head', accent:true}]); },
+  function(){ return frozenLayersDiagram(4, 6, 21.4); },
+  function(){ return barChart([{label:'V2 separation',v:0.02,color:'#e2635f'},{label:'V3 separation',v:0.30,color:'#56c08a'}], 0.35); },
+  function(){ return statBig('13×', 'LARGER CRITICAL/LOW SEPARATION', '#56c08a'); },
+  function(){ return '<div style="display:flex; flex-direction:column; gap:10px; align-items:center;">' +
+      '<div class="fbox" style="text-align:center;">Before (V2): Risk Level: <span style="color:#b79cf0;">MEDIUM</span></div>' +
+      '<div class="farrow">same sentence, new model</div>' +
+      '<div class="fbox accent" style="text-align:center;">After (V3): Risk Level: <span style="color:#e2635f;">CRITICAL</span></div>' +
+    '</div>'; },
+  function(){ return '<div style="display:flex; flex-direction:column; gap:8px; align-items:center;">' +
+      '<div class="fbox" style="border-color:#e2635f; color:#e2635f;">265MB checkpoint ✕ GitHub limit</div>' +
+      '<div class="farrow">↓</div>' +
+      '<div class="fbox accent">56MB — trainable weights only ✓</div>' +
+    '</div>'; },
+  function(){ return patternList([{score:'0.860',label:'"deleted all data...fix immediately...unacceptable"'},{score:'0.808',label:'"unauthorized access...password changed...financial risk"'}]); },
+  function(){ return '<div class="fbox" style="border-color:#f2a93b; color:#f2a93b; text-align:left; font-size:10.5px;">⚠ Severe ≠ CRITICAL.<br>"Production down, losing revenue" → HIGH (0.69), not CRITICAL.<br>Threshold is pattern-calibrated, not a general severity scale.</div>'; },
+  function(){ return checklistGrid(['Live Streamlit app (V1/V2/V3)','GitHub repo, 31 tests','15-slide deck','Data insights','Working paper']); }
 ];
 
 // ---------- day text content ----------
 var DAYS = [
 {h:"I built an AI system that catches its own overfitting.", s:"Live. In the app. Not in a slide.",
- li:"For the last few weeks I've been building OmniFeedback AI — an enterprise feedback-triage platform that ingests multi-channel customer feedback, scores urgency with a custom PyTorch model, and drafts resolutions with a GenAI copilot. But the part I'm proudest of isn't a feature. It's a bug I found in my own project — and how I fixed it, live, in the shipped app. Over the next 21 days I'm going to walk through the whole build: the architecture, the algorithms, the bugs, and the honest metrics. Starting today.",
- tw:"Spent weeks building an AI feedback-triage system. Found a bug in my own metrics. Instead of hiding it, I built a live toggle into the app so anyone can see it happen. 21 days of build-in-public starts now. 🧵👇"},
+ li:"For the last few weeks I've been building OmniFeedback AI — an enterprise feedback-triage platform that ingests multi-channel customer feedback, scores urgency with a custom PyTorch model, and drafts resolutions with a GenAI copilot. But the part I'm proudest of isn't a feature. It's a bug I found in my own project — and how I fixed it, live, in the shipped app. Over the next 31 days I'm going to walk through the whole build: the architecture, the algorithms, the bugs, and the honest metrics. Starting today.",
+ tw:"Spent weeks building an AI feedback-triage system. Found a bug in my own metrics. Instead of hiding it, I built a live toggle into the app so anyone can see it happen. 31 days of build-in-public starts now. 🧵👇"},
 
 {h:"Feedback arrives everywhere. Crises hide in the noise.", s:"Tickets. Tweets. Reviews. Call notes. None of them talk to each other.",
  li:"Here's the problem OmniFeedback AI solves: a payment outage happens at 2am. It shows up as a spike in App Store reviews, angry tweets, and support tickets — three channels that don't share data, and that no one is watching all at once. Manual triage across channels like this takes hours. By the time a human notices the pattern, the damage is done. That's the gap I set out to close: a system that scores urgency the moment feedback arrives, across every channel, in under a second.",
@@ -430,9 +474,49 @@ var DAYS = [
  li:"Before calling OmniFeedback AI 'done,' I ran it through a QA/PM-style review — mapping out three real user journeys (a support manager triaging a ticket, a PM reviewing weekly trends, a skeptical technical reviewer checking my claims), and logging 9 concrete findings ranked by severity, with an honest 'fixed vs. still open' status on each. My recommendation to a hypothetical stakeholder includes two caveats I'd want to hear before deploying this myself: the clustering findings are currently capped by a synthetic-data limitation, and the free GenAI backend is intentionally simple. I'd rather a reviewer hear that from me than discover it themselves.",
  tw:"Ran my own project through a QA/PM review: 3 user journeys, 9 ranked findings, honest fixed-vs-open status on each. Including the caveats that make the product look less perfect. I'd rather say it first than have someone else find it."},
 
-{h:"That's the build. Now go see it yourself.", s:"Live app · GitHub · 15-slide deck · Data insights · Research paper",
- li:"That's 21 days of building OmniFeedback AI in public — from a suspicious 'perfect' F1 score, through the bug hunt, to a shipped app where you can toggle between the naive and hardened versions and watch the metrics change live. Everything is public: the live Streamlit app, the full GitHub repo with 25 passing tests, a 15-slide technical deck, a full data-insights writeup, a QA/product review, and a working paper documenting the whole methodology. If you build things and have ever shipped a 'perfect' metric you didn't fully trust — I'd love to hear about it. Links in the comments. Thanks for following along.",
- tw:"That's a wrap on 21 days of building OmniFeedback AI in public. Live app, full GitHub repo, slide deck, data insights, and a working paper — all public, all link in bio. If you've ever shipped a 'perfect' metric you didn't quite trust, I want to hear about it. 🙏"}
+{h:"V2 said MEDIUM. It should have said CRITICAL.", s:"Found by a real person testing the live app — not by any of my 27 passing tests.",
+ li:"Just when I thought OmniFeedback AI was done, a friend testing the live app found something worse than a display bug: V2's urgency model scored an obviously critical complaint ('the app crashes every time I check out, I've switched to a competitor') almost identically to an obviously positive one. Every test I'd written checked that the CODE was correct. None of them checked whether the MODEL actually understood language it hadn't seen verbatim in training. That gap is what the next few days are about.",
+ tw:"A friend testing my live app found V2 scoring an obviously-critical complaint the same as an obviously-positive one. 27 passing tests didn't catch it — because tests check code correctness, not whether a model actually generalizes. Here's what was actually wrong. 🧧"},
+
+{h:"55% of the words were invisible to the model.", s:"V2's entire vocabulary: 196 words, learned from scratch.",
+ li:"Here's the root cause, measured directly instead of guessed: V2's BiLSTM builds its own vocabulary from the words it sees during training — and that vocabulary is exactly 196 words, because the synthetic training templates are narrow. I tokenized the sentence that broke it and checked: 55% of the words mapped to <UNK> (unknown). With over half a sentence invisible to the model, it has almost nothing to work with — so it just outputs something close to the training average, regardless of whether the text is a five-alarm fire or a thank-you note.",
+ tw:"Measured it directly: 55% of the words in a real complaint sentence were outside V2's 196-word vocabulary, mapped to <UNK>. With over half the sentence invisible, the model can't tell critical from positive — it just guesses near the average."},
+
+{h:"The fix: stop learning English from scratch.", s:"Same idea as a garbage-classification project that used a pretrained CNN instead of training from zero.",
+ li:"The fix came from a completely different project: I once built an image classifier for garbage sorting, and fine-tuning a small slice of a pretrained model beat training a CNN from scratch by a wide margin — because the pretrained model already understood general visual features, and only needed to be taught how to map them onto my specific categories. Same idea applies to text: instead of a BiLSTM learning English from 4,000 rows, fine-tune a pretrained DistilBERT that already understands English from a much larger corpus, and only teach it to map that understanding onto an urgency score.",
+ tw:"Applied a lesson from an unrelated project: fine-tuning a pretrained model beat training from scratch by a wide margin for image classification. Same principle, applied to text this time — don't make a model learn English from 4,000 rows when a pretrained one already knows English."},
+
+{h:"Freeze 4 layers. Train 2. Get 21.4%.", s:"Trainable parameters: 14.2M out of 66.4M — the rest carries over pretrained knowledge unchanged.",
+ li:"Concretely: DistilBERT has 6 transformer layers. I froze the embeddings and the first 4 layers entirely — their weights never update — and only trained the last 2 layers plus a small regression head. That's 21.4% of the model's parameters actually changing during training, deliberately close to the ratio from that earlier garbage-classification project. The other ~79% keeps its pretrained, general-purpose language understanding completely intact.",
+ tw:"Froze DistilBERT's embeddings + first 4 of 6 layers. Only trained the last 2 layers + a regression head. Result: 21.4% of parameters trainable, ~79% keeps its pretrained knowledge untouched. Deliberately mirrors a transfer-learning ratio from a past project."},
+
+{h:"Same test set. Similar scores. Totally different real-world behavior.", s:"V2 test MSE 0.0162 vs V3 0.0160 — nearly identical on synthetic data.",
+ li:"Here's the part that would be easy to miss if you only looked at the standard metrics: on the same held-out synthetic test set, V2 and V3 score almost identically (MSE 0.0162 vs 0.0160, macro-F1 0.821 vs 0.825). If I'd stopped there, I'd have concluded the new model wasn't worth the extra complexity. The synthetic test set literally cannot reveal the bug, because it's drawn from the same narrow template family the model was trained on. The real test had to be sentences from outside that distribution.",
+ tw:"V2 vs V3 on the standard synthetic test set: nearly identical scores (0.0162 vs 0.0160 MSE). If I'd stopped there I'd have missed the whole point. The synthetic test set can't reveal a generalization bug — you have to test on text outside the training distribution."},
+
+{h:"13x the separation. Same amount of training data.", s:"V2: 0.02 gap between critical and positive scores. V3: 0.30.",
+ li:"Here's the number that actually matters: I took the exact sentences that exposed V2's failure and ran them through both models side by side. V2's average score for critical feedback minus its average score for positive feedback: 0.02 — essentially no separation at all. V3's: 0.30 — roughly 13 times larger, and V3 never saw a single additional training row. All that changed was learning from a pretrained starting point instead of from zero.",
+ tw:"Ran the same real-world sentences through both models. V2's critical-vs-positive separation: 0.02 (can't tell them apart). V3's: 0.30. 13x larger, with zero additional training data — just a pretrained starting point instead of learning from scratch."},
+
+{h:"Watch it happen in the actual app UI.", s:"Same sentence. Same page. The only thing that changed is which model answered.",
+ li:"Nothing proves a fix like watching it happen in the real product instead of a script's stdout. I took the exact sentence that scored MEDIUM under V2 and re-ran it through the Inference Playground and GenAI Copilot pages after switching the sidebar to V3 — no other change. The risk badge flipped from MEDIUM to CRITICAL, live, in the same UI a customer would actually use. That's the whole reason this app has a model-version toggle built into every page instead of just a comparison chart on one page: the fix has to be checkable by clicking around, not just by reading a claim.",
+ tw:"Took the exact sentence that scored MEDIUM under V2, flipped the sidebar to V3, re-ran it — same page, same UI. Risk badge flipped to CRITICAL live. That's why every page has a model toggle: a fix should be clickable, not just claimed."},
+
+{h:"The checkpoint was too big for GitHub.", s:"265MB saved, 100MB hard limit. Here's the fix that didn't require Git LFS.",
+ li:"Small but real deployment lesson: my first save of the new model was 265MB — GitHub's hard per-file limit is 100MB. But ~79% of that file was the frozen DistilBERT backbone, completely unchanged from the version anyone can download fresh from HuggingFace. So instead of reaching for Git LFS, I changed the save logic to persist only the fine-tuned parameters — the last 2 layers and the regression head — and reconstruct the frozen part at load time. Result: 56MB, verified to produce byte-for-byte identical predictions before and after the change.",
+ tw:"My fine-tuned model's checkpoint was 265MB — over GitHub's 100MB limit. Instead of Git LFS, I realized 79% of that file was an unchanged pretrained backbone I could just re-download at load time. Saved only the fine-tuned layers: 56MB, verified identical predictions."},
+
+{h:"So what actually triggers CRITICAL?", s:"Tested ~20 real sentences directly against the model instead of guessing.",
+ li:"After shipping V3, I wanted to know exactly what pushes a score above the 0.8 CRITICAL threshold — so I tested it empirically rather than assuming. Two patterns reliably crossed 0.8: 'your platform deleted my data without warning, fix this immediately, unacceptable' (0.86), and 'someone accessed my account without permission, changed my password, my financial data is at risk' (0.81). Genuinely severe complaints that don't match either pattern — like a production outage burning revenue — topped out around 0.69-0.79: high, but not critical.",
+ tw:"What actually triggers CRITICAL (≥0.8) in V3? Tested ~20 real sentences to find out. Two patterns reliably cross it: data deletion + demand for immediate fix, and unauthorized account access + financial risk. A severe outage complaint alone tops out around 0.7 — high, not critical."},
+
+{h:"Severe ≠ CRITICAL. Worth saying plainly.", s:"The threshold is calibrated to specific training patterns, not a general severity scale.",
+ li:"Here's the caveat I want to state clearly rather than let a reader assume: V3's CRITICAL threshold isn't 'the model's opinion of how bad this sounds' — it's calibrated to two specific patterns present in its training data (data loss, account compromise). A genuinely severe complaint that doesn't match those patterns will land HIGH, not CRITICAL, and that's expected behavior for a model trained on a particular data distribution, not a bug. I'd rather say this plainly than let someone discover the boundary themselves and wonder if the whole model is unreliable.",
+ tw:"Honest caveat on V3: its CRITICAL threshold is calibrated to specific patterns in training data (data loss, account compromise), not a general 'how bad is this' scale. A severe complaint outside those patterns lands HIGH, not CRITICAL. Expected behavior, not a bug — but worth saying plainly."},
+
+{h:"That's the build. Now go see it yourself.", s:"Live app (V1/V2/V3) · GitHub · 15-slide deck · Data insights · Research paper",
+ li:"That's 31 days of building OmniFeedback AI in public — from a suspicious 'perfect' F1 score, through a data-hardening fix, through a second real bug a friend found in the live app, through a transfer-learning fix that gave 13x better real-world separation with zero extra data. Everything is public: the live Streamlit app with all three model versions toggleable, the full GitHub repo with 31 passing tests, a 15-slide technical deck, a full data-insights writeup, a QA/product review, and a working paper documenting the whole methodology — bugs included, not edited out. If you build things and have ever shipped a model you didn't fully trust — I'd love to hear about it. Links in the comments. Thanks for following along.",
+ tw:"That's a wrap on 31 days of building OmniFeedback AI in public — two real bugs found and fixed live, not edited out of the story. Live app (V1/V2/V3), full GitHub repo, slide deck, data insights, working paper — all public, all link in bio. 🙏"}
 ];
 
 (function(){
