@@ -642,3 +642,34 @@ themselves to confirm the synthesis quality improvement actually lands as intend
 local-fallback path runs end-to-end against the real warehouse with no exceptions and produces the same
 summary as before the change (backend correctly reported as `"local_bart"`); a monkeypatched test
 confirmed the Claude code path's structure (dict shape, UI branch) without exercising the real API.
+
+## 2026-09-13 — Milestone 16: NER tags "iPhone 15" / "iOS" as MISC — a tagging-scheme limit, not a model bug
+
+**Feedback**: user asked why the NER page tags product/software names ("iPhone 15", "iOS") as `MISC`
+instead of something more specific, and whether it's fixable.
+
+**Diagnosis**: both the prior model (`dbmdz/bert-large-cased-finetuned-conll03-english`) and the current
+one (`dslim/bert-base-NER`, swapped in Milestone 14 for memory) are trained on **CoNLL-2003**, which
+defines only 4 entity types: `PER`, `ORG`, `LOC`, `MISC`. There is no `PRODUCT` or software-version tag
+in this scheme at all — `MISC` is the designated catch-all for anything that isn't a person, org, or
+place (nationalities, events, products, software). So this is not a regression from the Milestone 14
+model swap; both models share the identical tag set and would behave the same way here.
+
+**Investigated a real fix**: an OntoNotes-5-trained model would add a dedicated `PRODUCT`/`WORK_OF_ART`
+tag. Checked two candidate small HF repos (`tner/roberta-base-ontonotes5`, `tner/deberta-v3-base-ontonotes5`)
+via the HF API — both 404, not reliably available. `Babelscape/wikineural-multilingual-ner` (709MB) is
+available but still uses the same 4-class CoNLL-style scheme, so it wouldn't fix anything. The one real
+OntoNotes option, `flair/ner-english-ontonotes-large`, is a different library (Flair, not `transformers`)
+at ~1.7GB — larger than our entire current NER+summarizer footprint combined (1.66GB, Milestone 14), and
+would reintroduce the exact memory pressure just fixed.
+
+**Decision**: not worth it at this project's scale — no small, reliable, `transformers`-pipeline-native
+model with a PRODUCT tag exists, and the one real alternative would undo the recent memory fix. Fixed the
+*honesty* of the page instead: added an inline caption on the NER page, shown whenever a MISC entity
+appears, explaining the CoNLL-2003 scheme limitation and why a fix was investigated and passed on —
+documented as a known limitation rather than silently left unexplained.
+
+**Verification performed**: confirmed both models' shared CoNLL-2003 provenance; verified via
+`huggingface_hub.HfApi().repo_info(files_metadata=True)` that the OntoNotes `tner` candidates don't
+resolve and that `wikineural` is 709MB but not OntoNotes-schemed; live-read the updated
+`pages/4_NER_and_Summarization.py` caption logic.

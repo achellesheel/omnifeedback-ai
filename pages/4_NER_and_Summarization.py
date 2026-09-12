@@ -89,5 +89,16 @@ if st.button("Extract Entities"):
         entities = extract_entities(sample_text)
     if entities:
         st.dataframe(entities, use_container_width=True, hide_index=True)
+        if any(e["entity_group"] == "MISC" for e in entities):
+            st.caption(
+                "ℹ️ **Why MISC?** This model is trained on CoNLL-2003, which has only 4 entity types: "
+                "PER, ORG, LOC, and MISC. There's no dedicated PRODUCT/SOFTWARE tag in that scheme, so "
+                "product and software names (e.g. \"iPhone 15\", \"iOS\") fall into MISC by design — this "
+                "is a tagging-scheme limitation shared by essentially every CoNLL-trained NER model, not "
+                "a bug from a specific model choice. An OntoNotes-trained model would add a PRODUCT tag, "
+                "but the smallest reliable option we found (Flair's OntoNotes NER) is ~1.7GB — larger than "
+                "our entire current NER+summarizer footprint combined, and would reintroduce the memory "
+                "pressure fixed in the last deploy. Not worth it at this project's scale."
+            )
     else:
         st.info("No named entities detected in this text.")
