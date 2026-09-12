@@ -1,0 +1,89 @@
+{
+  "variant": "v2_hardened",
+  "n_records": 4000,
+  "confusion_matrix_at_0.5": {
+    "tn": 2300,
+    "fp": 355,
+    "fn": 275,
+    "tp": 1070
+  },
+  "f1_at_0.5": 0.8260521429409613,
+  "best_threshold": 0.48,
+  "f1_at_best_threshold": 0.8285,
+  "confusion_matrix_at_best_threshold": {
+    "tn": 2273,
+    "fp": 382,
+    "fn": 245,
+    "tp": 1100
+  },
+  "pred_vs_true_correlation": 0.8693,
+  "channel_breakdown": {
+    "Call Center Note": {
+      "mean": 0.3748,
+      "count": 805
+    },
+    "Email Support": {
+      "mean": 0.3773,
+      "count": 808
+    },
+    "Mobile App": {
+      "mean": 0.3883,
+      "count": 792
+    },
+    "Twitter": {
+      "mean": 0.3686,
+      "count": 789
+    },
+    "Web Review": {
+      "mean": 0.3779,
+      "count": 806
+    }
+  },
+  "aspect_breakdown": {
+    "App Crash": {
+      "mean": 0.3895,
+      "count": 664
+    },
+    "Billing Defect": {
+      "mean": 0.3767,
+      "count": 667
+    },
+    "General Praise": {
+      "mean": 0.3755,
+      "count": 686
+    },
+    "Product Quality": {
+      "mean": 0.3534,
+      "count": 664
+    },
+    "Shipping Delay": {
+      "mean": 0.3898,
+      "count": 666
+    },
+    "UI Ergonomics": {
+      "mean": 0.3795,
+      "count": 653
+    }
+  },
+  "chi2_channel_vs_urgency": {
+    "chi2": 4.181,
+    "p_value": 0.840437,
+    "dof": 8
+  },
+  "n_false_negatives": 275,
+  "n_false_positives": 355,
+  "false_negative_examples": [
+    "Decent experience overall, app was okay.",
+    "Decent experience overall, website was okay.",
+    "Decent experience overall, support chat was okay.",
+    "It does what it says, nothing special about the app.",
+    "Decent experience overall, checkout was okay."
+  ],
+  "false_positive_examples": [
+    "The website works fine but could use minor improvements.",
+    "System latency is terrible after the server migration, nothing works.",
+    "The support chat works fine but could use minor improvements.",
+    "The support chat works fine but could use minor improvements.",
+    "The checkout works fine but could use minor improvements."
+  ]
+}

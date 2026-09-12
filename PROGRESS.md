@@ -238,6 +238,5 @@ This is exactly the kind of gap that a Docker-based deployment (already verified
 sidesteps entirely, since the base image fixes the Python version explicitly — worth highlighting as a
 reason to prefer container deployment for anything beyond a quick demo.
 
-**Status**: awaiting confirmation that setting Python 3.11 via Streamlit Cloud's Advanced Settings (or a
-redeploy after this fix) resolves the build — this requires action in the Streamlit Cloud dashboard that
-isn't reachable from here.
+**Resolved**: confirmed working after setting Python 3.11 explicitly via Streamlit Cloud's Advanced
+Settings. Live app: https://omnifeedback-ai-c4mmclqnkgytms6vuzqtjp.streamlit.app/
