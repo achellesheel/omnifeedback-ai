@@ -206,3 +206,38 @@ actually works, not just that the Dockerfile parses.
 **Status**: product build (steps 1–5) is now complete, tested, containerized, and pushed. Next up per
 the original request: steps 6–9 (data insights, QA/PM-style business review, enhancement ideas, 15-page
 slide deck), then the content phase (blog series, Twitter/LinkedIn, research paper).
+
+## 2026-09-13 — Milestone 5: First live deploy failed — Streamlit Cloud Python version mismatch
+
+**What happened**: first deploy to Streamlit Community Cloud failed during dependency install. Cloud
+provisioned **Python 3.14.7** for the app container; `torch<2.6.0,>=2.2.0` (this project's pin, matching
+what was tested locally on Python 3.11) has no published wheels for Python 3.14 at all — the resolver
+correctly reported the pin as unsatisfiable rather than silently installing something broken.
+
+**Root cause**: nothing in the repo told Streamlit Cloud which Python to use, so it defaulted to its
+current latest (3.14), which is newer than this project's pinned dependency range supports. This is a
+gap in Milestone 1's deployment-readiness assumptions — "pinned to versions known to install on Streamlit
+Cloud's Python 3.11" assumed Cloud defaults to 3.11, which was true when that assumption was written but
+is no longer the platform default.
+
+**Fix, two parts**:
+1. Added `runtime.txt` (containing `3.11`) to the repo root — the documented mechanism for pinning a
+   Community Cloud app's Python version.
+2. **However**: multiple current Streamlit community reports (streamlit/streamlit#15326 and several
+   discuss.streamlit.io threads, mid-late 2026) describe `runtime.txt` being silently ignored by Cloud's
+   build system, with apps still provisioned on 3.13/3.14 regardless. Streamlit's own docs describe the
+   Python version as being set via the **"Advanced settings" dialog at deploy time** (or "Manage app" →
+   Settings for an existing app), not via a repo file — that UI setting is the authoritative mechanism.
+   Documented this clearly in the README's deployment section so the fix isn't silently dependent on a
+   file that may not be honored.
+
+**Lesson for the eventual blog post**: "pin your requirements" is necessary but not sufficient for
+reproducible deployment — the runtime itself needs pinning too, and on managed platforms that pin may
+live in platform UI/settings rather than in the repo, which is easy to miss until a real deploy fails.
+This is exactly the kind of gap that a Docker-based deployment (already verified working in Milestone 4)
+sidesteps entirely, since the base image fixes the Python version explicitly — worth highlighting as a
+reason to prefer container deployment for anything beyond a quick demo.
+
+**Status**: awaiting confirmation that setting Python 3.11 via Streamlit Cloud's Advanced Settings (or a
+redeploy after this fix) resolves the build — this requires action in the Streamlit Cloud dashboard that
+isn't reachable from here.

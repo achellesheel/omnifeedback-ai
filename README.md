@@ -138,8 +138,14 @@ Claude instead, copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.to
 
 1. Push this repo to GitHub.
 2. On [share.streamlit.io](https://share.streamlit.io), point a new app at `app.py`.
-3. (Optional) add `ANTHROPIC_API_KEY` under the app's Secrets settings.
-4. Done — the warehouse and models ship pre-committed, so the deployed app works immediately.
+3. **Important — set the Python version to 3.11** in the deploy dialog's "Advanced settings" (or, for
+   an already-deployed app, under "Manage app" → Settings). A `runtime.txt` pinning `3.11` is included,
+   but Streamlit Cloud has known issues ignoring it and defaulting to whatever the latest Python is —
+   which currently has no compatible `torch` wheels in this project's pinned version range. Explicitly
+   selecting 3.11 in Advanced Settings is the reliable fix.
+4. (Optional) add `ANTHROPIC_API_KEY` under the app's Secrets settings.
+5. The warehouse and models ship pre-committed, so once the Python version is correct the app deploys
+   immediately with no training step.
 
 ---
 
