@@ -4,6 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import pandas as pd
 import streamlit as st
 
 from src.app_state import select_variant
@@ -40,12 +41,23 @@ n = st.slider("Number of most-critical feedback records to summarize", 5, 50, 15
 # content BART sees.
 sorted_df = df.sort_values("urgency_score", ascending=False)
 deduped = sorted_df.drop_duplicates(subset="raw_text")
-critical_texts = deduped["raw_text"].head(n).tolist()
+selected_df = deduped.head(n)
+critical_texts = selected_df["raw_text"].tolist()
 n_available = len(deduped)
 st.caption(
     f"{len(critical_texts)} distinct complaints selected (out of {n_available} unique critical texts "
     f"available in this dataset — duplicates with different filler words are merged before summarizing)."
 )
+
+with st.expander(f"👀 View the {len(critical_texts)} tickets behind this summary"):
+    st.dataframe(
+        selected_df[["feedback_id", "channel", "aspect_category", "urgency_score", "raw_text"]]
+        .rename(columns={
+            "feedback_id": "ID", "channel": "Channel", "aspect_category": "Aspect",
+            "urgency_score": "Urgency", "raw_text": "Ticket Text",
+        }),
+        use_container_width=True, hide_index=True,
+    )
 
 if st.button("Generate Executive Summary", type="primary"):
     with st.spinner(f"Summarizing {len(critical_texts)} distinct critical feedback records with BART "
