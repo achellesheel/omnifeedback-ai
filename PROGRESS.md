@@ -605,3 +605,40 @@ free-tier hosting for a project this compute-heavy, not glossed over. The model-
 should help some (smaller models = fewer CPU-seconds per inference call), but a project like this
 genuinely strains what a free tier is designed for — see `docs/PRODUCTION_READINESS.md` for the paid-tier
 discussion this motivates.
+
+## 2026-09-13 — Milestone 15: Executive summaries "read like copy-pasted tickets" — an architectural mismatch, not a tuning problem
+
+**Feedback**: the Batch Executive Summary lacked genuine synthesis — it read as reused ticket sentences
+rather than a real executive brief identifying cross-cutting themes.
+
+**Diagnosis**: BART/DistilBART-family models are trained on CNN/DailyMail news articles to do
+span-compression — a well-documented property in the summarization literature is that these models
+behave close to extractive (copying/lightly editing salient source sentences) even when technically
+"abstractive." That's a workable approximation of "summary" for long flowing news prose, but our tickets
+are already terse, keyword-dense complaint sentences ("Major outage across the platform, unable to log
+in for hours.") — there's no flowing prose to compress, so the model's span-selection behavior surfaces
+directly as "it just copied the tickets." No BART-family model size swap fixes this: it's a mismatch
+between the tool (span-compression) and the actual task (identify recurring themes across many short,
+independent statements and write new synthesizing prose) — the same "model class doesn't match the task"
+pattern as Milestone 8's BiLSTM vocabulary problem, just for a different component.
+
+**Fix**: extended `generate_resolution()`'s existing pluggable-backend pattern (Claude if configured,
+deterministic local fallback otherwise) to the executive summary feature. `generate_executive_summary()`
+in `src/genai_copilot.py` uses Claude with an explicit synthesis-oriented system prompt ("identify the
+2-4 recurring themes... do NOT simply copy, lightly reword, or concatenate individual ticket sentences")
+when `ANTHROPIC_API_KEY` is configured, and falls back to the existing BART pipeline (still useful, just
+honestly labeled as more extractive) with zero configuration required otherwise. The app now shows which
+backend produced a given summary and, on the local fallback, explains why it reads extractive rather than
+hiding the limitation.
+
+**Honest limitation of this verification**: no Anthropic API key is available in this development
+environment, so the Claude synthesis path's actual *output quality* could not be tested end-to-end here
+— only its plumbing (backend selection, JSON/dict shape, UI branching) was verified, via a monkeypatched
+key and canned response. The local BART fallback path was fully verified against real data and confirmed
+unchanged from its prior behavior. The user will need to add `ANTHROPIC_API_KEY` and test the Claude path
+themselves to confirm the synthesis quality improvement actually lands as intended.
+
+**Verification performed**: `pytest tests/ -v` — 31/31 passing; live Streamlit smoke test confirmed the
+local-fallback path runs end-to-end against the real warehouse with no exceptions and produces the same
+summary as before the change (backend correctly reported as `"local_bart"`); a monkeypatched test
+confirmed the Claude code path's structure (dict shape, UI branch) without exercising the real API.

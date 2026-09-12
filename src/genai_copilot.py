@@ -170,3 +170,50 @@ def generate_resolution(feedback_text: str, urgency_score: float) -> dict:
     result = _local_backend(feedback_text, urgency_score)
     result["_backend"] = backend_used
     return result
+
+
+EXEC_SUMMARY_SYSTEM_PROMPT = """You are OmniFeedback AI's executive briefing assistant. You will be \
+given a batch of raw customer feedback tickets. Your job is genuine synthesis, not sentence extraction: \
+identify the 2-4 recurring themes or root causes across the batch, note overall business risk/impact, \
+and write a 3-4 sentence executive brief a C-suite reader could act on in 20 seconds. Do NOT simply \
+copy, lightly reword, or concatenate individual ticket sentences — name the patterns across tickets \
+("N reports of checkout failures", "recurring billing disputes") rather than repeating any one ticket's \
+exact wording. Respond with ONLY the brief itself — no preamble, no markdown, no bullet list."""
+
+
+def _claude_executive_summary(texts: list, api_key: str) -> str:
+    import anthropic
+
+    client = anthropic.Anthropic(api_key=api_key)
+    numbered = "\n".join(f"{i+1}. {t}" for i, t in enumerate(texts))
+    message = client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=300,
+        system=EXEC_SUMMARY_SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": f"{len(texts)} tickets:\n{numbered}"}],
+    )
+    return message.content[0].text.strip()
+
+
+def generate_executive_summary(texts: list) -> dict:
+    """Returns {"summary": str, "backend": "claude"|"local_bart"}.
+
+    Why this exists: src/transformer_nlp.py's summarize_batch (BART-family) is a span-compression
+    model trained on long-form news articles — on our short, keyword-dense complaint sentences it
+    behaves close to extractive (near-verbatim reuse of source sentences), which reads as "not really
+    summarizing" rather than genuine thematic synthesis. An instruction-following LLM can actually be
+    told to identify cross-ticket patterns instead of compressing spans, so — mirroring
+    generate_resolution()'s pluggable backend above — Claude drafts the brief when a key is configured,
+    falling back to the local BART pipeline (still useful, just more extractive) with zero config.
+    """
+    from src.transformer_nlp import summarize_batch
+
+    api_key = _get_anthropic_key()
+    if api_key:
+        try:
+            summary = _claude_executive_summary(texts, api_key)
+            return {"summary": summary, "backend": "claude"}
+        except Exception:
+            pass  # fall through to local BART pipeline
+
+    return {"summary": summarize_batch(texts), "backend": "local_bart"}
