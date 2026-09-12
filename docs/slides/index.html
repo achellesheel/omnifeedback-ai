@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OmniFeedback AI Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f4ef; --surface:#ffffff; --surface-2:#edeae1; --border:#dcd7c8;
+    --text:#1b2030; --text-dim:#5b6478;
+    --accent:#c97c1b; --accent-ink:#ffffff; --accent-2:#1e8f82;
+    --critical:#c4433f; --good:#2e7d53;
+    --mono-bg:#efeae1;
+    --shadow: 0 1px 2px rgba(27,32,48,.06), 0 8px 24px rgba(27,32,48,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10141f; --surface:#171c2b; --surface-2:#1f2537; --border:#2b3348;
+      --text:#e7eaf3; --text-dim:#99a2bc;
+      --accent:#f2a93b; --accent-ink:#10141f; --accent-2:#4fd1c5;
+      --critical:#e2635f; --good:#56c08a;
+      --mono-bg:#131826;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10141f; --surface:#171c2b; --surface-2:#1f2537; --border:#2b3348;
+    --text:#e7eaf3; --text-dim:#99a2bc;
+    --accent:#f2a93b; --accent-ink:#10141f; --accent-2:#4fd1c5;
+    --critical:#e2635f; --good:#56c08a;
+    --mono-bg:#131826;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    overflow:hidden;
+  }
+  h1,h2,h3{font-family:"IBM Plex Sans",system-ui,sans-serif; font-weight:700; text-wrap:balance; letter-spacing:-0.01em; margin:0;}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+  p{line-height:1.6; color:var(--text); margin:0;}
+  .dim{color:var(--text-dim);}
+  a{color:var(--accent);}
+
+  #deck{position:relative; width:100%; height:100dvh; overflow:hidden;}
+  .slide{
+    position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center;
+    padding: 6vh clamp(20px, 6vw, 96px) 12vh;
+    opacity:0; transform:translateY(14px);
+    transition:opacity .38s ease, transform .38s ease;
+    pointer-events:none;
+  }
+  .slide.active{opacity:1; transform:translateY(0); pointer-events:auto;}
+  .slide-inner{max-width:1080px; margin:0 auto; width:100%;}
+
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:14px;
+  }
+  .eyebrow::before{content:""; width:16px; height:2px; background:var(--accent); display:inline-block;}
+
+  h2.slide-title{font-size:clamp(28px,4vw,44px); margin-bottom:18px;}
+  .slide p.lead{font-size:clamp(16px,1.6vw,19px); max-width:66ch; color:var(--text-dim);}
+
+  /* nav */
+  #navbar{
+    position:absolute; left:0; right:0; bottom:0; height:64px;
+    display:flex; align-items:center; justify-content:center; gap:18px;
+    background:linear-gradient(to top, var(--bg) 55%, transparent);
+    z-index:10;
+  }
+  .nav-btn{
+    width:38px; height:38px; border-radius:8px; border:1px solid var(--border);
+    background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:16px;
+  }
+  .nav-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .nav-btn:disabled{opacity:.35; cursor:default;}
+  .nav-btn:disabled:hover{border-color:var(--border); color:var(--text);}
+  #dots{display:flex; gap:6px;}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--border); border:none; cursor:pointer; padding:0;}
+  .dot.active{background:var(--accent); width:20px; border-radius:4px;}
+  #counter{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--text-dim); min-width:52px; text-align:center;}
+
+  /* shared components */
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow);}
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  @media (max-width: 760px){ .grid-2,.grid-3{grid-template-columns:1fr;} }
+
+  .stat-tile{padding:18px 20px; display:flex; flex-direction:column; gap:6px;}
+  .stat-tile .val{font-family:"IBM Plex Mono",monospace; font-size:clamp(22px,2.6vw,30px); font-weight:600; font-variant-numeric:tabular-nums;}
+  .stat-tile .label{font-size:13px; color:var(--text-dim);}
+  .stat-tile.win .val{color:var(--good);}
+  .stat-tile.warn .val{color:var(--critical);}
+
+  table{border-collapse:collapse; width:100%; font-size:14.5px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border);}
+  th{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim); font-weight:600;}
+  td.num, th.num{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; text-align:right;}
+
+  .pill{display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-family:"IBM Plex Mono",monospace;}
+  .pill.good{background:color-mix(in srgb, var(--good) 18%, transparent); color:var(--good);}
+  .pill.critical{background:color-mix(in srgb, var(--critical) 18%, transparent); color:var(--critical);}
+  .pill.accent{background:color-mix(in srgb, var(--accent) 18%, transparent); color:var(--accent);}
+
+  .code-block{
+    background:var(--mono-bg); border:1px solid var(--border); border-radius:10px;
+    padding:16px 18px; font-family:"IBM Plex Mono",monospace; font-size:13px; line-height:1.65;
+    overflow-x:auto; color:var(--text);
+  }
+  .code-block .k{color:var(--accent-2);}
+  .code-block .s{color:var(--accent);}
+
+  .flow{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .flow-box{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:10px 14px; font-size:13.5px; font-weight:500; box-shadow:var(--shadow);
+  }
+  .flow-box.accent{border-color:var(--accent); color:var(--accent);}
+  .flow-arrow{color:var(--text-dim); font-size:16px;}
+
+  .badge-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+  .badge{
+    font-family:"IBM Plex Mono",monospace; font-size:12px; padding:5px 10px;
+    border:1px solid var(--border); border-radius:6px; color:var(--text-dim);
+  }
+
+  .callout{
+    border-left:3px solid var(--accent); padding:12px 16px; background:var(--surface-2);
+    border-radius:0 8px 8px 0; font-size:14.5px;
+  }
+  .callout.critical{border-left-color:var(--critical);}
+  .callout.good{border-left-color:var(--good);}
+
+  ul.checklist{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px;}
+  ul.checklist li{display:flex; gap:10px; font-size:14.5px; align-items:flex-start;}
+  ul.checklist li::before{content:"—"; color:var(--accent); flex-shrink:0;}
+
+  .schema-box{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-family:"IBM Plex Mono",monospace; font-size:12.5px; box-shadow:var(--shadow);}
+  .schema-box .tbl-name{color:var(--accent); font-weight:600; margin-bottom:4px;}
+  .schema-box .fk{color:var(--accent-2);}
+
+  svg text{font-family:"IBM Plex Mono",monospace; fill:var(--text-dim);}
+  .quote-num{font-family:"IBM Plex Mono",monospace; font-size:clamp(48px,9vw,96px); font-weight:600; line-height:1;}
+
+  footer.slide-foot{position:absolute; bottom:78px; left:0; right:0; text-align:center; font-size:12px; color:var(--text-dim); font-family:"IBM Plex Mono",monospace;}
+
+  @media (max-width:600px){
+    .slide{padding:5vh 20px 14vh;}
+    h2.slide-title{font-size:26px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- 1 -->
+  <section class="slide">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="eyebrow" style="justify-content:center;">Technical Walkthrough — 15 slides</div>
+      <h1 style="font-size:clamp(40px,7vw,72px); margin-bottom:10px;">OmniFeedback&nbsp;AI</h1>
+      <p class="lead" style="margin:0 auto 28px; text-align:center;">Enterprise feedback ingestion, escalation triage, and a GenAI resolution copilot —
+        built with the overfitting fix made visible, live, instead of just claimed.</p>
+      <div class="badge-row" style="justify-content:center;">
+        <span class="badge">Python 3.11</span>
+        <span class="badge">PyTorch BiLSTM</span>
+        <span class="badge">HuggingFace Transformers</span>
+        <span class="badge">Streamlit</span>
+        <span class="badge">SQLite Star Schema</span>
+      </div>
+      <p style="margin-top:34px; font-size:14px;">
+        <a href="https://omnifeedback-ai-c4mmclqnkgytms6vuzqtjp.streamlit.app/" target="_blank" rel="noopener">Live demo →</a>
+        &nbsp;&nbsp;·&nbsp;&nbsp;
+        <a href="https://github.com/achellesheel/omnifeedback-ai" target="_blank" rel="noopener">GitHub repository →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">The Hook</div>
+      <h2 class="slide-title">One model looked perfect.<br>That was the problem.</h2>
+      <div class="grid-2" style="margin-top:8px;">
+        <div class="card stat-tile warn">
+          <span class="label">V1 · Naive generator — K-Means silhouette</span>
+          <span class="val">1.000</span>
+          <span class="dim" style="font-size:13px;">Memorized 9 unique training sentences. Meaningless.</span>
+        </div>
+        <div class="card stat-tile win">
+          <span class="label">V2 · Hardened generator — K-Means silhouette</span>
+          <span class="val">0.328</span>
+          <span class="dim" style="font-size:13px;">212 unique sentences, real ambiguity. Honest.</span>
+        </div>
+      </div>
+      <p class="lead" style="margin-top:22px;">Same pipeline. Same code. The only difference is the training data —
+        and the app lets you flip between them and watch every downstream metric change, live.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Problem &amp; Business Context</div>
+      <h2 class="slide-title">Feedback arrives everywhere. Crises hide in the noise.</h2>
+      <p class="lead" style="margin-bottom:22px;">Support tickets, app reviews, tweets, call notes — thousands of records a day,
+        across channels that don't talk to each other. A billing outage or crash spike can sit unnoticed for hours.</p>
+      <div class="grid-3">
+        <div class="card" style="padding:16px;">
+          <strong style="font-size:14px;">Crisis Escalation</strong>
+          <p class="dim" style="font-size:13.5px; margin-top:6px;">Detect urgency spikes in real time instead of discovering an outage from angry tweets.</p>
+        </div>
+        <div class="card" style="padding:16px;">
+          <strong style="font-size:14px;">Roadmap Prioritization</strong>
+          <p class="dim" style="font-size:13.5px; margin-top:6px;">Cluster unstructured feedback into operational themes without hand-labeling.</p>
+        </div>
+        <div class="card" style="padding:16px;">
+          <strong style="font-size:14px;">Resolution Drafting</strong>
+          <p class="dim" style="font-size:13.5px; margin-top:6px;">Cut manual ticket-handling time with a structured, reviewable AI-drafted reply.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Architecture</div>
+      <h2 class="slide-title">Six stages, one warehouse at the center</h2>
+      <div style="margin-top:10px; display:flex; flex-direction:column; gap:14px;">
+        <div class="flow">
+          <div class="flow-box accent">Raw feedback (CSV)</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box">Regex TextIngestor</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box accent">SQLite Star Schema (ACID)</div>
+        </div>
+        <div class="grid-3">
+          <div class="flow-box" style="text-align:center;">TF-IDF + K-Means<br><span class="dim" style="font-size:12px;">Kneedle elbow k-selection</span></div>
+          <div class="flow-box" style="text-align:center;">PyTorch BiLSTM<br><span class="dim" style="font-size:12px;">urgency regression, 0–1</span></div>
+          <div class="flow-box" style="text-align:center;">BERT NER + BART<br><span class="dim" style="font-size:12px;">entities + summarization</span></div>
+        </div>
+        <div class="flow" style="justify-content:center;">
+          <span class="flow-arrow">↓ all feed into ↓</span>
+        </div>
+        <div class="flow" style="justify-content:center;">
+          <div class="flow-box accent">GenAI Resolution Copilot</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box">Streamlit Dashboard (V1/V2 toggle on every page)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Data Ingestion &amp; Warehouse</div>
+      <h2 class="slide-title">A real star schema, not a flat CSV</h2>
+      <div class="grid-2">
+        <div>
+          <p class="lead" style="margin-bottom:14px;">Regex cleaning strips HTML, URLs, mentions, and repeated characters before
+            anything touches the database. Every batch insert runs inside one transaction:</p>
+          <div class="callout good">
+            <span class="mono" style="font-size:13px;">BEGIN → validate → INSERT × N → COMMIT</span><br>
+            <span class="dim" style="font-size:13px;">any constraint violation → full ROLLBACK, verified by a dedicated pytest case</span>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div class="schema-box"><div class="tbl-name">Fact_Feedback</div>feedback_id, user_id<span class="fk">→Dim_User</span>, channel_id<span class="fk">→Dim_Channel</span>, aspect_id<span class="fk">→Dim_Product</span>, urgency_score CHECK(0–1)</div>
+          <div class="schema-box"><div class="tbl-name">Dim_User</div>user_id</div>
+          <div class="schema-box"><div class="tbl-name">Dim_Channel</div>channel_id, channel_name UNIQUE</div>
+          <div class="schema-box"><div class="tbl-name">Dim_Product</div>aspect_id, aspect_category UNIQUE</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Classical ML</div>
+      <h2 class="slide-title">Choosing K without cheating</h2>
+      <div class="grid-2">
+        <div>
+          <p class="lead" style="margin-bottom:14px;">Naively maximizing silhouette picks whichever <span class="mono">k</span> is largest on
+            templated text — it never plateaus. Replaced <span class="mono">argmax(silhouette)</span> with the
+            <strong>Kneedle max-distance-from-chord elbow method</strong>.</p>
+          <div id="chart-elbow"></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="card stat-tile"><span class="label">Selected k (V2 Hardened)</span><span class="val">9</span></div>
+          <div class="card stat-tile"><span class="label">Silhouette at k=9</span><span class="val">0.328</span></div>
+          <div class="card" style="padding:14px;">
+            <span class="label dim" style="font-size:12px;">Baseline classifiers (macro-F1)</span>
+            <table style="margin-top:6px;"><tbody>
+              <tr><td>Logistic Regression</td><td class="num">0.914</td></tr>
+              <tr><td>Random Forest</td><td class="num">0.912</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Deep Learning</div>
+      <h2 class="slide-title">A BiLSTM that's told when to stop</h2>
+      <div class="grid-2">
+        <div>
+          <div class="flow" style="flex-direction:column; align-items:stretch; gap:8px;">
+            <div class="flow-box" style="text-align:center;">Embedding (dim 128)</div>
+            <div class="flow-box" style="text-align:center;">Bidirectional LSTM (64 units/direction)</div>
+            <div class="flow-box" style="text-align:center;">Dropout (p=0.3)</div>
+            <div class="flow-box accent" style="text-align:center;">Linear + Sigmoid → urgency ∈ [0,1]</div>
+          </div>
+        </div>
+        <div>
+          <ul class="checklist">
+            <li>Fixed-seed train / val / test split, done once before training</li>
+            <li>Early stopping on validation MSE (patience = 4)</li>
+            <li>Adam optimizer, L2 weight decay 1e-5</li>
+            <li>Metrics reported on the <strong>held-out test set</strong>, never validation</li>
+          </ul>
+          <div class="grid-2" style="margin-top:16px;">
+            <div class="card stat-tile"><span class="label">Test MSE (V2)</span><span class="val">0.016</span></div>
+            <div class="card stat-tile"><span class="label">Stopped at epoch</span><span class="val">6</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">The Headline Feature</div>
+      <h2 class="slide-title">V1 (naive) vs. V2 (hardened) — side by side</h2>
+      <table style="margin-top:6px;">
+        <thead><tr><th>Metric</th><th class="num">V1 Naive</th><th class="num">V2 Hardened</th></tr></thead>
+        <tbody>
+          <tr><td>Unique training sentences</td><td class="num">9</td><td class="num">212</td></tr>
+          <tr><td>K-Means silhouette (best k)</td><td class="num critical" style="color:var(--critical)">1.000</td><td class="num" style="color:var(--good)">0.328</td></tr>
+          <tr><td>Baseline classifier macro-F1</td><td class="num" style="color:var(--critical)">1.000</td><td class="num" style="color:var(--good)">0.914</td></tr>
+          <tr><td>BiLSTM test macro-F1</td><td class="num" style="color:var(--critical)">1.000</td><td class="num" style="color:var(--good)">0.821</td></tr>
+          <tr><td>BiLSTM test MSE</td><td class="num">0.0137</td><td class="num">0.0162</td></tr>
+        </tbody>
+      </table>
+      <div class="callout critical" style="margin-top:20px;">V1's perfect scores are the red flag, not the win — it memorized 9 sentences.
+        Every viewer can verify this themselves on the app's <strong>Model Comparison</strong> page.</div>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Transformer NLP</div>
+      <h2 class="slide-title">Entity extraction &amp; executive summarization</h2>
+      <div class="grid-2">
+        <div class="card" style="padding:16px;">
+          <span class="dim" style="font-size:12px;">BERT NER — dbmdz/bert-large-cased-finetuned-conll03-english</span>
+          <p style="font-size:13.5px; margin:10px 0;">"The iPhone 15 crashed after the iOS 17.2 update, and Apple support in California hasn't responded."</p>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="pill accent">iPhone 15 · MISC · .99</span>
+            <span class="pill accent">iOS 17.2 · MISC · .94</span>
+            <span class="pill accent">Apple · ORG · .99</span>
+            <span class="pill accent">California · LOC · .99</span>
+          </div>
+        </div>
+        <div class="card" style="padding:16px;">
+          <span class="dim" style="font-size:12px;">BART — facebook/bart-large-cnn</span>
+          <p style="font-size:13.5px; margin-top:10px;">5 distinct crisis reports (crash, billing, shipping, outage, latency)
+          condensed to one coherent executive brief in ~5s (cached weights).</p>
+          <div class="callout good" style="margin-top:10px; font-size:13px;">Live-tested, not just imported — see PROGRESS.md Milestone 2.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">GenAI Copilot</div>
+      <h2 class="slide-title">Chain-of-Thought, structured JSON, zero required API keys</h2>
+      <div class="grid-2">
+        <div class="code-block">{<br>
+          &nbsp;&nbsp;<span class="k">"thought_process"</span>: <span class="s">"..."</span>,<br>
+          &nbsp;&nbsp;<span class="k">"root_cause"</span>: <span class="s">"..."</span>,<br>
+          &nbsp;&nbsp;<span class="k">"risk_level"</span>: <span class="s">"CRITICAL|HIGH|MEDIUM|LOW"</span>,<br>
+          &nbsp;&nbsp;<span class="k">"recommended_action"</span>: <span class="s">"..."</span>,<br>
+          &nbsp;&nbsp;<span class="k">"customer_reply_draft"</span>: <span class="s">"..."</span><br>
+          }
+        </div>
+        <div>
+          <p class="lead" style="margin-bottom:14px;">Few-shot examples + Chain-of-Thought system prompt. Backend is pluggable:</p>
+          <div class="flow" style="flex-direction:column; align-items:stretch;">
+            <div class="flow-box" style="text-align:center;">No API key → deterministic local rules (free, always works)</div>
+            <div class="flow-arrow" style="text-align:center;">↕ auto-switches</div>
+            <div class="flow-box accent" style="text-align:center;">ANTHROPIC_API_KEY set → Claude drafts the response</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Data Insights I</div>
+      <h2 class="slide-title">Confusion matrix &amp; threshold sensitivity</h2>
+      <div class="grid-2">
+        <div id="chart-confusion"></div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="card stat-tile"><span class="label">Macro-F1 @ 0.5 threshold</span><span class="val">0.826</span></div>
+          <div class="card stat-tile"><span class="label">Best threshold found (sweep)</span><span class="val">0.48 → F1 0.829</span></div>
+          <div class="card stat-tile"><span class="label">Pred vs. true urgency correlation</span><span class="val">0.869</span></div>
+          <p class="dim" style="font-size:12.5px;">0.3-pt gain from tuning means 0.5 was already close to optimal — no hidden accuracy left on the table.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Data Insights II</div>
+      <h2 class="slide-title">Most errors are boundary cases, not failures</h2>
+      <div class="grid-2">
+        <div class="card" style="padding:16px;">
+          <span class="dim" style="font-size:12px;">False negatives</span>
+          <p style="font-size:13.5px; margin-top:8px;">Almost entirely the deliberately-ambiguous "neutral" template class
+            (urgency 0.35–0.6) — the model lands on the wrong side of a boundary the dataset was built to contain, not a comprehension failure.</p>
+        </div>
+        <div class="card" style="padding:16px;">
+          <span class="dim" style="font-size:12px;">An honest limitation</span>
+          <p style="font-size:13.5px; margin-top:8px;">Channel vs. urgency independence: <span class="mono">χ²=4.18, p=0.840</span>.
+            The synthetic generator assigns channel independent of content — a real gap, documented and fixed in the roadmap, not hidden.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">QA &amp; Business Value</div>
+      <h2 class="slide-title">Verified end to end, caveats stated up front</h2>
+      <table>
+        <thead><tr><th>Finding</th><th>Severity</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Naive generator made the pipeline overfit-prone</td><td>High</td><td><span class="pill good">Fixed</span></td></tr>
+          <tr><td>Docker healthcheck silently broken (missing curl)</td><td>Medium</td><td><span class="pill good">Fixed</span></td></tr>
+          <tr><td>Cloud deploy Python-version mismatch blocked launch</td><td>High</td><td><span class="pill good">Fixed</span></td></tr>
+          <tr><td>Channel/aspect carry no signal in synthetic data</td><td>Medium</td><td><span class="pill accent">Open</span></td></tr>
+          <tr><td>Playground &amp; Copilot don't share pasted text</td><td>Low</td><td><span class="pill accent">Open</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="eyebrow">Enhancement Roadmap</div>
+      <h2 class="slide-title">What's next, ranked by cost vs. leverage</h2>
+      <div class="grid-3">
+        <div class="card" style="padding:16px;">
+          <strong style="font-size:13.5px;">Free, do first</strong>
+          <p class="dim" style="font-size:13px; margin-top:8px;">Correlate channel/aspect with template category; validate on real Yelp/Sentiment140 data; share state across pages.</p>
+        </div>
+        <div class="card" style="padding:16px;">
+          <strong style="font-size:13.5px;">Cheap paid APIs</strong>
+          <p class="dim" style="font-size:13px; margin-top:8px;">OpenAI embeddings for semantic clustering; Pinecone for similar-ticket RAG; Claude API already wired in.</p>
+        </div>
+        <div class="card" style="padding:16px;">
+          <strong style="font-size:13.5px;">Research bets</strong>
+          <p class="dim" style="font-size:13px; margin-top:8px;">Fine-tuned DistilBERT vs. BiLSTM comparison; active learning on boundary cases; drift monitoring.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 -->
+  <section class="slide">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="eyebrow" style="justify-content:center;">Closing</div>
+      <h2 class="slide-title">Built, tested, deployed — documented every step</h2>
+      <p class="lead" style="margin:0 auto 22px; text-align:center;">25 passing tests · live Streamlit deployment · Dockerfile verified ·
+        full build log in PROGRESS.md · data insights, product review, and roadmap in /docs.</p>
+      <div class="badge-row" style="justify-content:center;">
+        <span class="badge">scikit-learn</span><span class="badge">SciPy</span><span class="badge">Plotly</span>
+        <span class="badge">pytest</span><span class="badge">Docker</span>
+      </div>
+      <p style="margin-top:30px; font-size:14px;">
+        <a href="https://omnifeedback-ai-c4mmclqnkgytms6vuzqtjp.streamlit.app/" target="_blank" rel="noopener">Live demo →</a>
+        &nbsp;&nbsp;·&nbsp;&nbsp;
+        <a href="https://github.com/achellesheel/omnifeedback-ai" target="_blank" rel="noopener">GitHub →</a>
+      </p>
+      <p class="dim" style="margin-top:26px; font-size:12.5px;">Next: blog series, research paper, Twitter/LinkedIn threads.</p>
+    </div>
+  </section>
+
+</div>
+
+<div id="navbar">
+  <button class="nav-btn" id="prevBtn" aria-label="Previous slide">‹</button>
+  <div id="dots"></div>
+  <span id="counter" class="mono">1 / 15</span>
+  <button class="nav-btn" id="nextBtn" aria-label="Next slide">›</button>
+</div>
+
+<script>
+(function(){
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var idx = 0;
+  var dotsEl = document.getElementById('dots');
+  var counterEl = document.getElementById('counter');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+
+  for (var i=0;i<total;i++){
+    var d = document.createElement('button');
+    d.className = 'dot'; d.setAttribute('aria-label','Go to slide '+(i+1));
+    d.addEventListener('click', (function(n){ return function(){ go(n); }; })(i));
+    dotsEl.appendChild(d);
+  }
+
+  function render(){
+    slides.forEach(function(s,i){ s.classList.toggle('active', i===idx); });
+    dotsEl.querySelectorAll('.dot').forEach(function(d,i){ d.classList.toggle('active', i===idx); });
+    counterEl.textContent = (idx+1) + ' / ' + total;
+    prevBtn.disabled = idx===0;
+    nextBtn.disabled = idx===total-1;
+  }
+  function go(n){ idx = Math.max(0, Math.min(total-1, n)); render(); }
+
+  prevBtn.addEventListener('click', function(){ go(idx-1); });
+  nextBtn.addEventListener('click', function(){ go(idx+1); });
+  window.addEventListener('keydown', function(e){
+    if (e.key==='ArrowRight' || e.key===' ') { go(idx+1); }
+    else if (e.key==='ArrowLeft') { go(idx-1); }
+  });
+
+  var touchStartX = null;
+  document.getElementById('deck').addEventListener('touchstart', function(e){ touchStartX = e.touches[0].clientX; });
+  document.getElementById('deck').addEventListener('touchend', function(e){
+    if (touchStartX===null) return;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if (dx > 50) go(idx-1); else if (dx < -50) go(idx+1);
+    touchStartX = null;
+  });
+
+  render();
+
+  // --- Chart 1: Kneedle elbow — silhouette vs k, V1 vs V2 ---
+  var v1 = [0.2667,0.3975,0.5322,0.6276,0.7276,0.8118,0.9039,1.0,1.0,1.0,1.0];
+  var v2 = [0.0726,0.1191,0.1468,0.1921,0.2235,0.2577,0.2923,0.3283,0.3595,0.3749,0.3910];
+  var ks = [2,3,4,5,6,7,8,9,10,11,12];
+
+  function lineChart(containerId, seriesA, seriesB, labelA, labelB, colorA, colorB){
+    var w = 420, h = 200, padL = 34, padR = 14, padT = 14, padB = 26;
+    var innerW = w - padL - padR, innerH = h - padT - padB;
+    var maxY = 1.0;
+    function x(i){ return padL + (i/(ks.length-1)) * innerW; }
+    function y(v){ return padT + (1 - v/maxY) * innerH; }
+    function pathOf(series){
+      return series.map(function(v,i){ return (i===0?'M':'L') + x(i).toFixed(1) + ',' + y(v).toFixed(1); }).join(' ');
+    }
+    var svg = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img" aria-label="Silhouette vs k chart">';
+    // gridlines
+    [0,0.25,0.5,0.75,1.0].forEach(function(g){
+      svg += '<line x1="'+padL+'" y1="'+y(g).toFixed(1)+'" x2="'+(w-padR)+'" y2="'+y(g).toFixed(1)+'" stroke="var(--border)" stroke-width="1"/>';
+      svg += '<text x="'+(padL-8)+'" y="'+(y(g)+4).toFixed(1)+'" font-size="9" text-anchor="end">'+g.toFixed(2)+'</text>';
+    });
+    ks.forEach(function(k,i){
+      if (i%2===0){ svg += '<text x="'+x(i).toFixed(1)+'" y="'+(h-8)+'" font-size="9" text-anchor="middle">'+k+'</text>'; }
+    });
+    svg += '<path d="'+pathOf(seriesA)+'" fill="none" stroke="'+colorA+'" stroke-width="2"/>';
+    svg += '<path d="'+pathOf(seriesB)+'" fill="none" stroke="'+colorB+'" stroke-width="2.5"/>';
+    seriesA.forEach(function(v,i){ svg += '<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="2.5" fill="'+colorA+'"/>'; });
+    seriesB.forEach(function(v,i){ svg += '<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="2.5" fill="'+colorB+'"/>'; });
+    svg += '</svg>';
+    svg += '<div style="display:flex; gap:14px; margin-top:6px; font-size:11px;">' +
+      '<span style="color:'+colorA+'">● '+labelA+'</span>' +
+      '<span style="color:'+colorB+'">● '+labelB+'</span></div>';
+    document.getElementById(containerId).innerHTML = svg;
+  }
+  lineChart('chart-elbow', v1, v2, 'V1 naive (hits 1.0 — meaningless)', 'V2 hardened (real elbow at k≈9)',
+    getComputedStyle(document.documentElement).getPropertyValue('--critical').trim() || '#c4433f',
+    getComputedStyle(document.documentElement).getPropertyValue('--good').trim() || '#2e7d53');
+
+  // --- Chart 2: confusion matrix tiles ---
+  (function(){
+    var cm = {tn:2300, fp:355, fn:275, tp:1070};
+    var maxV = Math.max(cm.tn, cm.fp, cm.fn, cm.tp);
+    function tileColor(v, isCorrect){
+      var t = v / maxV;
+      var base = isCorrect ? '46,125,83' : '196,67,63';
+      return 'rgba('+base+','+(0.12 + t*0.55).toFixed(2)+')';
+    }
+    var html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; max-width:340px;">' +
+      tile('True Negative', cm.tn, true) + tile('False Positive', cm.fp, false) +
+      tile('False Negative', cm.fn, false) + tile('True Positive', cm.tp, true) +
+      '</div>';
+    function tile(label, v, ok){
+      return '<div style="background:'+tileColor(v,ok)+'; border:1px solid var(--border); border-radius:10px; padding:14px;">' +
+        '<div style="font-family:\'IBM Plex Mono\',monospace; font-size:22px; font-weight:600;">'+v+'</div>' +
+        '<div style="font-size:11.5px; color:var(--text-dim); margin-top:2px;">'+label+'</div></div>';
+    }
+    document.getElementById('chart-confusion').innerHTML = html;
+  })();
+})();
+</script>
+</body>
+</html>

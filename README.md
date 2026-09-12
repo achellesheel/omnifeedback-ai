@@ -22,6 +22,9 @@ that needs zero API keys to run.
 📓 See [`PROGRESS.md`](./PROGRESS.md) for the full build log — every bug hit, every fix, and the
 reasoning behind each modeling choice, written as it happened.
 
+📊 [15-slide technical walkthrough](./docs/slides/index.html) · 📈 [Data insights](./docs/DATA_INSIGHTS.md)
+· 🔍 [Product review](./docs/PRODUCT_REVIEW.md) · 🚀 [Enhancement roadmap](./docs/ENHANCEMENTS.md)
+
 ---
 
 ## Live Demo Feature: V1 vs. V2

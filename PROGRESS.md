@@ -240,3 +240,37 @@ reason to prefer container deployment for anything beyond a quick demo.
 
 **Resolved**: confirmed working after setting Python 3.11 explicitly via Streamlit Cloud's Advanced
 Settings. Live app: https://omnifeedback-ai-c4mmclqnkgytms6vuzqtjp.streamlit.app/
+
+## 2026-09-13 — Milestone 6: Data insights, QA/PM review, roadmap, and a 15-slide deck (Steps 6–9)
+
+Moved past the core build into the analysis/presentation phase requested next.
+
+- **`scripts/data_insights.py`** computes real confusion matrix, threshold sensitivity (with a caught
+  metric-comparison bug — see below), predicted-vs-true correlation, per-channel/aspect breakdowns, and
+  concrete misclassification examples against the deployed V2 model. Full writeup: `docs/DATA_INSIGHTS.md`.
+- **Bug caught mid-analysis**: the first threshold-sweep pass used sklearn's `precision_recall_curve`,
+  which only tracks *positive-class* F1 — not comparable to the macro-F1 used everywhere else in this
+  project. It reported a "best" threshold that scored *worse* than the default 0.5, which was the tell
+  that something was wrong. Fixed by sweeping macro-F1 directly across candidate thresholds; the real
+  result (best threshold 0.48, only a 0.3-point F1 gain over 0.5) is a much more mundane and much more
+  credible finding.
+- **Real limitation surfaced, not hidden**: channel and aspect category carry essentially no signal in
+  the synthetic dataset (chi-squared p=0.840) — traced to the generator assigning them independent of
+  content. Documented plainly and queued as the top item in `docs/ENHANCEMENTS.md` rather than glossed
+  over.
+- **`docs/PRODUCT_REVIEW.md`**: QA/PM-style walkthrough — three user journeys (support manager, product
+  manager, technical reviewer), a 9-item findings table (fixed vs. open), and business-value framing that
+  states the platform's real caveats alongside its real strengths.
+- **`docs/ENHANCEMENTS.md`**: prioritized roadmap — free fixes first (generator channel/aspect
+  correlation, real-dataset validation pass, shared UI state), then cheap paid APIs (OpenAI embeddings,
+  Pinecone RAG, Claude already wired, Twilio/Slack alerting, hosted inference endpoints), then bigger
+  research bets (DistilBERT comparison, active learning, drift monitoring, multilingual support).
+- **15-slide technical deck** (`docs/slides/index.html`, published as an Artifact): architecture,
+  algorithms, the V1-vs-V2 story, and the data-insights findings above — built with a real design pass
+  (IBM Plex Sans/Mono pairing, an amber "urgency" accent tying the palette to the product's own urgency
+  score, light/dark theme support, keyboard/swipe navigation, inline SVG charts drawn from the actual
+  k-sweep and confusion-matrix numbers rather than stock icons).
+
+**Verification performed**: `pytest tests/ -v` still 25/25 passing (no source code changed, only new
+analysis scripts/docs); `data_insights.py` output manually sanity-checked against `training_summary.json`
+before writing any of the markdown docs, so every number quoted is traceable to an actual run.
