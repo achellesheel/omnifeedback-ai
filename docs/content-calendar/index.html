@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OmniFeedback AI — 31-Day Content Calendar</title>
+<title>OmniFeedback AI — 32-Day Content Calendar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&display=swap" rel="stylesheet">
@@ -389,14 +389,15 @@ var VISUALS = [
     '</div>'; },
   function(){ return patternList([{score:'0.860',label:'"deleted all data...fix immediately...unacceptable"'},{score:'0.808',label:'"unauthorized access...password changed...financial risk"'}]); },
   function(){ return '<div class="fbox" style="border-color:#f2a93b; color:#f2a93b; text-align:left; font-size:10.5px;">⚠ Severe ≠ CRITICAL.<br>"Production down, losing revenue" → HIGH (0.69), not CRITICAL.<br>Threshold is pattern-calibrated, not a general severity scale.</div>'; },
+  function(){ var m=0.15; return groupedBarChart([{label:'Yelp sep.', a:0.0249/m, b:0.1272/m},{label:'S140 sep.', a:0.0050/m, b:0.0837/m}], '#e2635f', '#56c08a', 'V2 (BiLSTM)', 'V3 (DistilBERT)'); },
   function(){ return checklistGrid(['Live Streamlit app (V1/V2/V3)','GitHub repo, 31 tests','15-slide deck','Data insights','Working paper']); }
 ];
 
 // ---------- day text content ----------
 var DAYS = [
 {h:"I built an AI system that catches its own overfitting.", s:"Live. In the app. Not in a slide.",
- li:"For the last few weeks I've been building OmniFeedback AI — an enterprise feedback-triage platform that ingests multi-channel customer feedback, scores urgency with a custom PyTorch model, and drafts resolutions with a GenAI copilot. But the part I'm proudest of isn't a feature. It's a bug I found in my own project — and how I fixed it, live, in the shipped app. Over the next 31 days I'm going to walk through the whole build: the architecture, the algorithms, the bugs, and the honest metrics. Starting today.",
- tw:"Spent weeks building an AI feedback-triage system. Found a bug in my own metrics. Instead of hiding it, I built a live toggle into the app so anyone can see it happen. 31 days of build-in-public starts now. 🧵👇"},
+ li:"For the last few weeks I've been building OmniFeedback AI — an enterprise feedback-triage platform that ingests multi-channel customer feedback, scores urgency with a custom PyTorch model, and drafts resolutions with a GenAI copilot. But the part I'm proudest of isn't a feature. It's a bug I found in my own project — and how I fixed it, live, in the shipped app. Over the next 32 days I'm going to walk through the whole build: the architecture, the algorithms, the bugs, and the honest metrics. Starting today.",
+ tw:"Spent weeks building an AI feedback-triage system. Found a bug in my own metrics. Instead of hiding it, I built a live toggle into the app so anyone can see it happen. 32 days of build-in-public starts now. 🧵👇"},
 
 {h:"Feedback arrives everywhere. Crises hide in the noise.", s:"Tickets. Tweets. Reviews. Call notes. None of them talk to each other.",
  li:"Here's the problem OmniFeedback AI solves: a payment outage happens at 2am. It shows up as a spike in App Store reviews, angry tweets, and support tickets — three channels that don't share data, and that no one is watching all at once. Manual triage across channels like this takes hours. By the time a human notices the pattern, the damage is done. That's the gap I set out to close: a system that scores urgency the moment feedback arrives, across every channel, in under a second.",
@@ -514,9 +515,13 @@ var DAYS = [
  li:"Here's the caveat I want to state clearly rather than let a reader assume: V3's CRITICAL threshold isn't 'the model's opinion of how bad this sounds' — it's calibrated to two specific patterns present in its training data (data loss, account compromise). A genuinely severe complaint that doesn't match those patterns will land HIGH, not CRITICAL, and that's expected behavior for a model trained on a particular data distribution, not a bug. I'd rather say this plainly than let someone discover the boundary themselves and wonder if the whole model is unreliable.",
  tw:"Honest caveat on V3: its CRITICAL threshold is calibrated to specific patterns in training data (data loss, account compromise), not a general 'how bad is this' scale. A severe complaint outside those patterns lands HIGH, not CRITICAL. Expected behavior, not a bug — but worth saying plainly."},
 
+{h:"Did I just write examples that made my fix look good?", s:"Fair question. So I tested on 150 real Yelp reviews + 150 real tweets I never touched.",
+ li:"Every V2-vs-V3 comparison so far used 8 sentences I wrote myself. That's a completely fair thing to be skeptical of — so I reran the exact same test on real, independently-authored text: 150 one-star vs. five-star Yelp reviews, and 150 negative vs. positive tweets from Sentiment140. V3's separation held up, statistically significant on both (p<0.0001) — but at roughly HALF the size of my hand-written test (0.08–0.13 vs. 0.30). Real text is noisier than examples written to be unambiguous, and I think reporting that smaller, real number matters more than repeating the bigger, curated one. Bonus finding: V2 wasn't uniformly useless — it had a tiny-but-real signal on long Yelp reviews, and zero signal at all on short tweets, exactly matching the vocabulary-size root cause from a few days ago. The strongest single number in this whole project: V3's correlation with Yelp's real 5-star ratings is 0.68. V2's is 0.07 — not statistically significant at all.",
+ tw:"Fair critique of my last few posts: every V2-vs-V3 test used sentences I wrote myself. So I reran it on 150 real Yelp reviews + 150 real tweets. V3 held up (p<0.0001) — at HALF the effect size of my hand-written test. Reporting the smaller real number, not the bigger curated one."},
+
 {h:"That's the build. Now go see it yourself.", s:"Live app (V1/V2/V3) · GitHub · 15-slide deck · Data insights · Research paper",
- li:"That's 31 days of building OmniFeedback AI in public — from a suspicious 'perfect' F1 score, through a data-hardening fix, through a second real bug a friend found in the live app, through a transfer-learning fix that gave 13x better real-world separation with zero extra data. Everything is public: the live Streamlit app with all three model versions toggleable, the full GitHub repo with 31 passing tests, a 15-slide technical deck, a full data-insights writeup, a QA/product review, and a working paper documenting the whole methodology — bugs included, not edited out. If you build things and have ever shipped a model you didn't fully trust — I'd love to hear about it. Links in the comments. Thanks for following along.",
- tw:"That's a wrap on 31 days of building OmniFeedback AI in public — two real bugs found and fixed live, not edited out of the story. Live app (V1/V2/V3), full GitHub repo, slide deck, data insights, working paper — all public, all link in bio. 🙏"}
+ li:"That's 32 days of building OmniFeedback AI in public — from a suspicious 'perfect' F1 score, through a data-hardening fix, through a second real bug a friend found in the live app, through a transfer-learning fix that gave 13x better real-world separation, validated on real data I never touched. Everything is public: the live Streamlit app with all three model versions toggleable, the full GitHub repo with 31 passing tests, a 15-slide technical deck, a full data-insights writeup, a QA/product review, and a working paper documenting the whole methodology — bugs included, not edited out. If you build things and have ever shipped a model you didn't fully trust — I'd love to hear about it. Links in the comments. Thanks for following along.",
+ tw:"That's a wrap on 32 days of building OmniFeedback AI in public — two real bugs found and fixed live, validated on real data, not edited out of the story. Live app (V1/V2/V3), full GitHub repo, slide deck, data insights, working paper — all public, all link in bio. 🙏"}
 ];
 
 (function(){
