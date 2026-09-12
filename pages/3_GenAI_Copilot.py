@@ -21,6 +21,12 @@ st.caption(
 
 variant = select_variant()
 st.info(f"Urgency scored with: **{variant['label']}**", icon="🔀")
+if variant.get("model_type") == "transformer":
+    st.success(
+        "✅ **V3 is validated on real Yelp reviews and Sentiment140 tweets**, not just synthetic examples "
+        "— see the **Model Comparison** page for the full scorecard and concrete before/after flips.",
+        icon="🏆",
+    )
 
 
 @st.cache_resource

@@ -1,0 +1,160 @@
+{
+  "metrics": [
+    {
+      "metric": "Real-world critical/low separation (hand-written, 8 sentences)",
+      "v2": 0.0224,
+      "v3": 0.2984,
+      "v3_wins": true
+    },
+    {
+      "metric": "Real-world separation \u2014 Yelp reviews (150/class, real data)",
+      "v2": 0.0249,
+      "v3": 0.1272,
+      "v3_wins": true,
+      "v2_significant": true,
+      "v3_significant": true
+    },
+    {
+      "metric": "Real-world separation \u2014 Sentiment140 tweets (150/class, real data)",
+      "v2": 0.005,
+      "v3": 0.0837,
+      "v3_wins": true,
+      "v2_significant": false,
+      "v3_significant": true
+    },
+    {
+      "metric": "Correlation with real Yelp 5-star rating (Spearman \u03c1)",
+      "v2": 0.0731,
+      "v3": 0.6816,
+      "v3_wins": true,
+      "v2_significant": false,
+      "v3_significant": true
+    },
+    {
+      "metric": "Synthetic held-out test MSE (lower is better)",
+      "v2": 0.016153378216059583,
+      "v3": 0.015991246321630712,
+      "v3_wins": true,
+      "lower_is_better": true
+    },
+    {
+      "metric": "Synthetic held-out test macro-F1",
+      "v2": 0.8209401564773822,
+      "v3": 0.8250326145345714,
+      "v3_wins": true
+    }
+  ],
+  "critical_trigger_examples": [
+    {
+      "text": "Your platform deleted all of my account data without any warning, I need this fixed immediately, this is completely unacceptable.",
+      "v2_score": 0.7905,
+      "v2_level": "HIGH",
+      "v3_score": 0.8597,
+      "v3_level": "CRITICAL"
+    },
+    {
+      "text": "Your system deleted all of my customer records without any warning, I need this fixed immediately, this is completely unacceptable and has put my entire business at risk.",
+      "v2_score": 0.8114,
+      "v2_level": "CRITICAL",
+      "v3_score": 0.8465,
+      "v3_level": "CRITICAL"
+    },
+    {
+      "text": "Your app deleted all of my data without any warning, I need this fixed right now, this is completely unacceptable and has put my business at serious risk.",
+      "v2_score": 0.8184,
+      "v2_level": "CRITICAL",
+      "v3_score": 0.8282,
+      "v3_level": "CRITICAL"
+    },
+    {
+      "text": "Someone accessed my account without my permission and changed my password, I am now completely locked out and my financial data is at serious risk.",
+      "v2_score": 0.4719,
+      "v2_level": "MEDIUM",
+      "v3_score": 0.8077,
+      "v3_level": "CRITICAL"
+    },
+    {
+      "text": "Someone accessed my account without permission and changed my password, I am locked out of everything and there is sensitive financial data at risk.",
+      "v2_score": 0.4636,
+      "v2_level": "MEDIUM",
+      "v3_score": 0.8033,
+      "v3_level": "CRITICAL"
+    }
+  ],
+  "stress_test_flips": [
+    {
+      "expected": "CRITICAL",
+      "text": "Our production checkout API has been down for 45 minutes and we're losing real revenue every minute \u2014 nobody from support has called us back.",
+      "v2_score": 0.3926,
+      "v3_score": 0.6262,
+      "v2_level": "MEDIUM",
+      "v3_level": "HIGH",
+      "flipped": true
+    },
+    {
+      "expected": "CRITICAL",
+      "text": "I was charged three times for the same subscription this month and your chatbot keeps looping me back to the same FAQ page.",
+      "v2_score": 0.5284,
+      "v3_score": 0.5967,
+      "v2_level": "MEDIUM",
+      "v3_level": "MEDIUM",
+      "flipped": false
+    },
+    {
+      "expected": "CRITICAL",
+      "text": "The mobile app crashes every single time I try to check out, on three different phones. I've already switched to a competitor.",
+      "v2_score": 0.3934,
+      "v3_score": 0.5629,
+      "v2_level": "MEDIUM",
+      "v3_level": "MEDIUM",
+      "flipped": false
+    },
+    {
+      "expected": "LOW",
+      "text": "Just wanted to say the redesigned onboarding flow is fantastic \u2014 set up my whole team in under 10 minutes.",
+      "v2_score": 0.4284,
+      "v3_score": 0.2706,
+      "v2_level": "MEDIUM",
+      "v3_level": "LOW",
+      "flipped": true
+    },
+    {
+      "expected": "LOW",
+      "text": "Support resolved my billing question in one chat message. Really impressed.",
+      "v2_score": 0.4031,
+      "v3_score": 0.3231,
+      "v2_level": "MEDIUM",
+      "v3_level": "LOW",
+      "flipped": true
+    },
+    {
+      "expected": "AMBIGUOUS",
+      "text": "Loved the new UI, but it logged me out twice today for no reason.",
+      "v2_score": 0.3588,
+      "v3_score": 0.548,
+      "v2_level": "MEDIUM",
+      "v3_level": "MEDIUM",
+      "flipped": false
+    },
+    {
+      "expected": "AMBIGUOUS",
+      "text": "Mostly happy with the service, though the search feature has been a bit flaky since the update.",
+      "v2_score": 0.5542,
+      "v3_score": 0.5373,
+      "v2_level": "MEDIUM",
+      "v3_level": "MEDIUM",
+      "flipped": false
+    },
+    {
+      "expected": "AMBIGUOUS",
+      "text": "Shipping has been slower than promised \u2014 order placed 9 days ago, tracking hasn't updated in 4 days.",
+      "v2_score": 0.4742,
+      "v3_score": 0.6007,
+      "v2_level": "MEDIUM",
+      "v3_level": "HIGH",
+      "flipped": true
+    }
+  ],
+  "n_stress_test_bucket_flips": 4,
+  "n_stress_test_total": 8
+}

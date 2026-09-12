@@ -487,3 +487,39 @@ shows the actual selected variant.
 directly (`v3_transformer`'s summary keys have no `best_k`); a smoke-test agent replicated the page's exact
 logic for all 3 variants against the live warehouse/artifacts and confirmed no exception and a populated
 cluster assignment for each; live Streamlit server boots cleanly.
+
+## 2026-09-13 — Milestone 12: A "V3 superiority scorecard" — feedback that V2 vs. V3 looked identical
+
+**Feedback received**: after using the app directly, the difference between V2 and V3 wasn't obvious
+enough when clicking between them on ordinary pages — the case for V3 lived mostly in prose and separate
+charts, not as one unmissable, quantified comparison. Also flagged: the app itself never disclosed the
+real-data validation (Milestone 10) — a user or interviewer evaluating the live app had no way to know
+V3 had been checked against real Yelp/Sentiment140 data at all.
+
+**Built** (`scripts/superiority_scorecard.py`): a consolidated scorecard combining every existing
+V2-vs-V3 metric (hand-written separation, Yelp separation, Sentiment140 separation, Yelp Spearman
+correlation, synthetic test MSE/F1) into one table with an explicit win/lose call per metric, plus two
+new concrete artifacts:
+
+1. **V2 tested on the 5 known CRITICAL-triggering examples for the first time** (Milestone 9 only ran V3
+   on these). Result: 2 of the 5 produce a genuine 2-tier jump — **"Someone accessed my account without
+   permission and changed my password..."** scores **V2: MEDIUM (0.47) → V3: CRITICAL (0.81)** — the
+   direct answer to "which examples does V3 correctly flag as CRITICAL that V2 does not." The other 3
+   (data-deletion phrasing) turned out to closely match a V2 training template, so V2 also scores them
+   CRITICAL/HIGH — reported honestly as *not* flip examples rather than cherry-picked to inflate the count.
+2. **Risk-tier flips on the original 8-sentence stress test**: 4 of 8 sentences change tier entirely
+   between V2 and V3 (not just a score nudge) — 2× MEDIUM→HIGH, 2× MEDIUM→LOW.
+
+**App changes**:
+- `pages/0_Model_Comparison.py`: new prominent section at the top of the V2-vs-V3 area — a "validated on
+  real data" success banner, a full metrics scorecard table (winner marked, significance shown), and the
+  concrete flip examples rendered as direct side-by-side text; the existing stress-test table now also
+  shows computed risk tiers and a "tier changed?" column instead of only raw scores.
+- `pages/1_Inference_Playground.py`, `pages/3_GenAI_Copilot.py`: added a persistent banner whenever V3 is
+  the active variant, stating the real-data validation result directly where a user is actually scoring
+  text — not just on the comparison page they might not visit.
+
+**Verification performed**: `pytest tests/ -v` — 31/31 passing; a smoke-test agent replicated the exact
+new page logic (metric dict formatting, flip-example filtering, risk-tier computation and column rename)
+against the real JSON files and confirmed the numbers (3 critical-trigger flips, 4/8 stress-test tier
+flips) match what's in the report; live Streamlit server boots cleanly with no tracebacks.
