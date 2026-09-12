@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.streamlit/secrets.toml
+.DS_Store
+*.egg-info/
+.pytest_cache/
+
+# Source course materials — not ours to redistribute; superseded by scripts/generate_data.py
+Final Project - OmniFeedback AI.docx
+OmniFeedback Data download.ipynb
