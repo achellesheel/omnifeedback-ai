@@ -464,3 +464,26 @@ callout above, so a viewer sees the nuance rather than a single flattering numbe
 new page section's exact data path (JSON loading, field access, p-value formatting) runs without
 exceptions against the real `models/real_data_validation.json`, and that the live Streamlit server boots
 cleanly with the new section.
+
+## 2026-09-13 — Milestone 11: Clustering Explorer crashed on V3 — found by a screenshot, fixed properly
+
+**Found by**: a screenshot of the live app showing `KeyError` on the Clustering Explorer page with V3
+selected in the sidebar.
+
+**Root cause**: V3 only replaces the urgency regressor (BiLSTM → DistilBERT); clustering (TF-IDF +
+K-Means) was never retrained separately for it — V3's `training_summary.json` has urgency-training keys
+(`test_mse`, `stopped_epoch`, ...) but no `best_k`/`k_sweep_scores`, and `models/v3_transformer/` has no
+`tfidf.pkl`/`kmeans_model.pkl` at all. The page unconditionally read `variant["model_dir"]`, which broke
+the moment a variant without clustering artifacts existed.
+
+**Decision**: keep the page (V1-vs-V2 clustering/elbow comparison is core to the project's story) rather
+than remove it, and make V3 fall back to V2's clustering artifacts explicitly, with a banner explaining
+why, instead of silently erroring or silently duplicating V2's charts unlabeled. `pages/2_Clustering_Explorer.py`
+now resolves a `clustering_variant` (V2 Hardened, whenever the selected variant's `model_type` is
+`"transformer"`) and uses that for the summary, warehouse, and artifact lookups, while the sidebar still
+shows the actual selected variant.
+
+**Verification performed**: `pytest tests/ -v` — 31/31 passing; confirmed the pre-fix `KeyError` precondition
+directly (`v3_transformer`'s summary keys have no `best_k`); a smoke-test agent replicated the page's exact
+logic for all 3 variants against the live warehouse/artifacts and confirmed no exception and a populated
+cluster assignment for each; live Streamlit server boots cleanly.

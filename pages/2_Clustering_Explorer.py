@@ -14,17 +14,31 @@ from sklearn.decomposition import PCA
 from src.app_state import select_variant
 from src.database import WarehouseManager
 from src.ml_models import load_artifacts
+from src.variants import VARIANTS
 
 st.set_page_config(page_title="Clustering Explorer", page_icon="🧩", layout="wide")
 st.title("🧩 Unsupervised Aspect Clustering")
 st.caption("K-Means over TF-IDF features, with the elbow/silhouette sweep used to justify the chosen K.")
 
 variant = select_variant()
-st.info(f"Viewing: **{variant['label']}**", icon="🔀")
 
-summary_path = variant["model_dir"] / "training_summary.json"
+# V3 only replaces the urgency regressor (BiLSTM -> DistilBERT) — clustering is TF-IDF/K-Means,
+# shared unchanged with V2 since it was never retrained separately for V3. Fall back to V2's
+# clustering artifacts rather than erroring on a training_summary.json that has no clustering keys.
+clustering_variant = variant
+if variant.get("model_type") == "transformer":
+    clustering_variant = VARIANTS["v2_hardened"]
+    st.info(
+        f"Viewing: **{variant['label']}** — clustering is unchanged from **{clustering_variant['label']}** "
+        f"below (V3 only replaces the urgency regressor; TF-IDF/K-Means was never retrained separately for it).",
+        icon="🔀",
+    )
+else:
+    st.info(f"Viewing: **{variant['label']}**", icon="🔀")
+
+summary_path = clustering_variant["model_dir"] / "training_summary.json"
 if not summary_path.exists():
-    st.error(f"No training summary found for {variant['label']}. Run `python scripts/run_pipeline.py` first.")
+    st.error(f"No training summary found for {clustering_variant['label']}. Run `python scripts/run_pipeline.py` first.")
     st.stop()
 
 with open(summary_path) as f:
@@ -48,13 +62,13 @@ with col2:
 st.divider()
 st.subheader("Cluster Contents")
 
-db = WarehouseManager(db_path=variant["db_path"])
+db = WarehouseManager(db_path=clustering_variant["db_path"])
 df = db.fetch_all_feedback()
 if df.empty:
     st.warning("Warehouse is empty.")
     st.stop()
 
-artifacts = load_artifacts(model_dir=variant["model_dir"])
+artifacts = load_artifacts(model_dir=clustering_variant["model_dir"])
 X = artifacts["vectorizer"].transform(df["cleaned_text"])
 df["cluster"] = artifacts["kmeans"].predict(X)
 
