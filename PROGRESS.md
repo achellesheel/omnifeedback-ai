@@ -182,4 +182,27 @@ model artifacts, BiLSTM inference on the same sentence returning variant-specifi
 "V1 looks better but is overfit" pattern holds exactly as expected in the saved training summaries; a live
 Streamlit server smoke test confirmed the app still boots cleanly with the new sidebar and page.
 
-**Deferred to the next pass**: README screenshots, Docker build verification, GitHub push.
+## 2026-09-12 — Milestone 4: GitHub push + Docker verification
+
+**GitHub**: pushed to [github.com/achellesheel/omnifeedback-ai](https://github.com/achellesheel/omnifeedback-ai)
+(public). Deliberately excluded the original course-provided spec document and scaffold notebook from
+version control — they're the source material's IP, not ours to redistribute, and are fully superseded
+by `scripts/generate_data.py`. README rewritten as an original project write-up rather than a course
+deliverable.
+
+**Docker — real bug found and fixed**: the `HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health`
+directive was silently broken — `python:3.11-slim` doesn't ship `curl`, so every healthcheck would have
+failed forever without ever showing up as a build error (Docker doesn't validate that a `HEALTHCHECK`
+binary exists at build time, only at container runtime). Caught by actually running the container and
+checking `docker inspect --format='{{json .State.Health}}'` instead of just checking the image built.
+Fixed by installing `curl` alongside `build-essential`. Also added `.dockerignore` (excludes `venv/`,
+`.git/`, and the excluded course materials) to keep the build context lean.
+
+**Verified**: `docker build` succeeds cleanly; `docker run` starts the container, `curl
+localhost:8502/_stcore/health` returns `ok`, the app serves real HTML (not an error page), and Docker's
+own health monitor reports `"Status":"healthy"` after the first check interval — confirming the fix
+actually works, not just that the Dockerfile parses.
+
+**Status**: product build (steps 1–5) is now complete, tested, containerized, and pushed. Next up per
+the original request: steps 6–9 (data insights, QA/PM-style business review, enhancement ideas, 15-page
+slide deck), then the content phase (blog series, Twitter/LinkedIn, research paper).

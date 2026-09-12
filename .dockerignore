@@ -1,0 +1,9 @@
+venv/
+.git/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+notebooks/
+Final Project - OmniFeedback AI.docx
+OmniFeedback Data download.ipynb
