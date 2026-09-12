@@ -6,8 +6,16 @@ should wrap construction in st.cache_resource rather than importing eagerly.
 """
 from functools import lru_cache
 
-NER_MODEL_NAME = "dbmdz/bert-large-cased-finetuned-conll03-english"
-SUMMARIZER_MODEL_NAME = "facebook/bart-large-cnn"
+NER_MODEL_NAME = "dslim/bert-base-NER"
+SUMMARIZER_MODEL_NAME = "sshleifer/distilbart-cnn-12-6"
+# Swapped from dbmdz/bert-large-cased-finetuned-conll03-english (1.33GB) and
+# facebook/bart-large-cnn (1.63GB) after the deployed app hit Streamlit Community
+# Cloud's memory ceiling ("This app has gone over its resource limits") once V3's
+# DistilBERT was added on top of the already-heavy bert-large + bart-large combo
+# (~2.96GB together). bert-base-NER (433MB) + distilbart-cnn-12-6 (1.22GB, a
+# distilled BART fine-tuned for the same CNN/DailyMail summarization task) cut
+# that combined footprint to ~1.66GB — same CoNLL03 entity tag scheme, same
+# summarization task, meaningfully smaller.
 
 
 @lru_cache(maxsize=1)

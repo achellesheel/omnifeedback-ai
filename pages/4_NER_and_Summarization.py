@@ -14,9 +14,9 @@ from src.transformer_nlp import extract_entities, summarize_batch
 st.set_page_config(page_title="NER & Summarization", page_icon="📝", layout="wide")
 st.title("📝 Executive Briefing & Entity Extraction")
 st.caption(
-    "BART (`facebook/bart-large-cnn`) condenses batches of critical feedback into an executive brief; "
-    "BERT NER (`dbmdz/bert-large-cased-finetuned-conll03-english`) extracts named entities. "
-    "Models are ~2.5GB combined and load lazily on first use — the first click on this page will be slow."
+    "DistilBART (`sshleifer/distilbart-cnn-12-6`) condenses batches of critical feedback into an "
+    "executive brief; BERT NER (`dslim/bert-base-NER`) extracts named entities. Models are ~1.7GB "
+    "combined and load lazily on first use — the first click on this page will be slow."
 )
 
 variant = select_variant()

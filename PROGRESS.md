@@ -559,3 +559,38 @@ future test of this page isn't mistaken for a second unresolved issue.
 the duplication root cause (30/46 unique) before writing any fix; re-ran `summarize_batch` on the deduped
 top-17 vs. top-46 lists and confirmed the two summaries now differ in genuinely new content rather than
 being coincidentally near-identical.
+
+## 2026-09-13 — Milestone 14: "This app has gone over its resource limits" — real memory overflow in production
+
+**Found by**: the live deployed app, directly — Streamlit Cloud's own out-of-memory page ("It's using too
+much memory!"), not a code exception. Initially misdiagnosed from the logs alone as the already-fixed
+Clustering Explorer `KeyError` (a stale log the user re-pasted); the actual current failure only became
+clear from a screenshot of the real error page.
+
+**Root cause, measured, not estimated**: queried HuggingFace's file metadata directly for the two
+heaviest models the app was loading — `dbmdz/bert-large-cased-finetuned-conll03-english` (1,334MB) and
+`facebook/bart-large-cnn` (1,625MB), **2,959MB combined**, on top of V3's DistilBERT (~260MB in memory
+once loaded, even though its checkpoint on disk is only 56.7MB — see Milestone 8) plus two small BiLSTMs.
+Streamlit Community Cloud's free tier has a hard memory ceiling; adding V3 on top of an already-heavy
+BERT-large + BART-large combination pushed a previously-marginal memory budget over the edge.
+
+**Fix**: swapped both models for meaningfully smaller equivalents doing the same job —
+`dslim/bert-base-NER` (433MB, same CoNLL03 PER/ORG/LOC/MISC tag scheme) and `sshleifer/distilbart-cnn-12-6`
+(1,222MB, a distilled BART fine-tuned for the same CNN/DailyMail-style summarization task). Combined:
+1,655MB — a **1.3GB reduction**.
+
+**Quality verified, not assumed**: re-ran the exact same test sentence used since Milestone 2
+("The iPhone 15 crashed after the iOS 17.2 update...") — all 4 entities still extracted correctly at
+>99% confidence (iPhone 15, iOS, Apple, California), though the smaller NER model split "iOS 17.2" into
+just "iOS" rather than the full version string — a minor precision loss, disclosed rather than hidden.
+Summarization re-tested at realistic production batch sizes (the same deduped top-17 and top-46 lists
+from Milestone 13): genuine compression held (1,176→244 chars at n=17, 3,086→276 chars at n=46) and the
+two summaries remained genuinely different from each other, confirming the model swap didn't undo the
+Milestone 13 dedup fix.
+
+**Verification performed**: `pytest tests/ -v` — 31/31 passing (no test depended on the specific model
+names); live-tested both new models with real inference before committing, at both toy scale and
+production batch scale; updated the one user-facing caption that named the old models.
+
+**Immediate mitigation given to the user**: reboot the app via Streamlit Cloud's dashboard to clear the
+already-overflowed memory while this fix deploys.
