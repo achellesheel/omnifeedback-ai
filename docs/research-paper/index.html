@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detecting Synthetic-Data Overfitting — Paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f4ef; --surface:#ffffff; --surface-2:#edeae1; --border:#dcd7c8;
+    --text:#1b2030; --text-dim:#5b6478;
+    --accent:#c97c1b; --accent-2:#1e8f82; --critical:#c4433f; --good:#2e7d53;
+    --shadow: 0 1px 2px rgba(27,32,48,.05), 0 8px 24px rgba(27,32,48,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10141f; --surface:#171c2b; --surface-2:#1f2537; --border:#2b3348;
+      --text:#e7eaf3; --text-dim:#99a2bc;
+      --accent:#f2a93b; --accent-2:#4fd1c5; --critical:#e2635f; --good:#56c08a;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10141f; --surface:#171c2b; --surface-2:#1f2537; --border:#2b3348;
+    --text:#e7eaf3; --text-dim:#99a2bc;
+    --accent:#f2a93b; --accent-2:#4fd1c5; --critical:#e2635f; --good:#56c08a;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:"IBM Plex Serif",Georgia,serif; padding-block:8vh; padding-inline:20px;}
+  .wrap{max-width:740px; margin:0 auto;}
+  .sans{font-family:"IBM Plex Sans",system-ui,sans-serif;}
+  .mono{font-family:"IBM Plex Mono",monospace;}
+
+  .kicker{font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); text-align:center; margin-bottom:18px;}
+  h1{font-family:"IBM Plex Serif",Georgia,serif; font-weight:700; font-size:clamp(26px,4vw,36px); text-align:center; text-wrap:balance; margin:0 0 18px; line-height:1.25;}
+  .authors{text-align:center; font-family:"IBM Plex Sans",sans-serif; font-size:14px; color:var(--text-dim); margin-bottom:6px;}
+  .affil{text-align:center; font-family:"IBM Plex Sans",sans-serif; font-size:12.5px; color:var(--text-dim); margin-bottom:36px;}
+
+  .abstract{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px 28px; box-shadow:var(--shadow); margin-bottom:40px;}
+  .abstract .label{font-family:"IBM Plex Sans",sans-serif; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); margin-bottom:10px;}
+  .abstract p{font-size:14.5px; line-height:1.75; margin:0;}
+
+  h2{font-family:"IBM Plex Sans",sans-serif; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); margin:44px 0 14px; padding-bottom:8px; border-bottom:1px solid var(--border);}
+  h3{font-family:"IBM Plex Sans",sans-serif; font-size:15.5px; font-weight:600; margin:26px 0 10px;}
+  p{font-size:15.5px; line-height:1.75; margin:0 0 14px; max-width:68ch;}
+  .dim{color:var(--text-dim);}
+
+  table{border-collapse:collapse; width:100%; font-size:13.5px; margin:16px 0; font-family:"IBM Plex Sans",sans-serif;}
+  caption{font-size:12.5px; color:var(--text-dim); text-align:left; margin-bottom:8px; caption-side:top;}
+  th,td{text-align:left; padding:8px 12px; border-bottom:1px solid var(--border);}
+  th{font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-dim); font-weight:600;}
+  td.num, th.num{font-family:"IBM Plex Mono",monospace; text-align:right; font-variant-numeric:tabular-nums;}
+
+  .fig{margin:20px 0;}
+  .fig-cap{font-family:"IBM Plex Sans",sans-serif; font-size:12.5px; color:var(--text-dim); margin-top:8px;}
+
+  ol.refs{font-family:"IBM Plex Sans",sans-serif; font-size:13px; line-height:1.8; padding-left:22px; color:var(--text-dim);}
+  ol.refs li{margin-bottom:6px;}
+
+  .callout{border-left:3px solid var(--accent); padding:14px 18px; background:var(--surface-2); border-radius:0 10px 10px 0; font-size:14.5px; margin:16px 0;}
+
+  footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--text-dim); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+  footer a{color:var(--text-dim);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Working Paper — Applied ML Systems</div>
+  <h1>Detecting and Correcting Synthetic-Data Overfitting in a Multi-Model Customer Feedback Triage Pipeline</h1>
+  <div class="authors">Pranav Chaturvedi</div>
+  <div class="affil">OmniFeedback AI Project · github.com/achellesheel/omnifeedback-ai</div>
+
+  <div class="abstract">
+    <div class="label">Abstract</div>
+    <p>We present OmniFeedback AI, an end-to-end customer-feedback triage system combining a
+    transactional data warehouse, unsupervised aspect clustering, a bidirectional LSTM (BiLSTM)
+    urgency regressor, transformer-based entity extraction and summarization, and a prompt-engineered
+    generative resolution copilot. During development, an initial synthetic training corpus produced
+    apparently ideal results — classifier macro-F1 of 1.000 and K-Means silhouette of 1.000 — which we
+    show to be an artifact of data construction (9 unique verbatim training sentences) rather than
+    evidence of model competence. We describe two concrete methodological fixes: (1) a hardened data
+    generator introducing template-based phrase composition, deliberately ambiguous boundary cases, and
+    simulated label noise, and (2) replacement of naive silhouette-maximizing cluster-count selection
+    with a Kneedle-style maximum-curvature elbow method, which we show is necessary because
+    template-structured text produces silhouette curves that do not plateau within a practically
+    searchable range. We report full before/after metrics, an error analysis distinguishing genuine
+    model failure from boundary-case ambiguity and injected label noise, and a data limitation
+    (statistically non-significant channel–urgency association, χ²=4.18, p=0.840) traced to the
+    generator's independent metadata assignment. We argue that this progression — from suspiciously
+    perfect metrics, through root-cause diagnosis, to an honestly-reported and independently
+    verifiable "before/after" comparison shipped directly in the production application — is itself a
+    reusable methodological pattern for applied ML projects trained partly or wholly on synthetic data.</p>
+  </div>
+
+  <h2>1. Introduction</h2>
+  <p>Enterprises process feedback across many uncoordinated channels — app store reviews, support
+  tickets, social posts, call transcripts — and manual triage is too slow to catch emerging incidents
+  (billing defects, outages, product regressions) before they compound. Automated triage systems
+  typically combine several model families: unsupervised topic discovery, supervised or regression-based
+  urgency scoring, transformer-based entity/summarization tooling, and increasingly, LLM-based response
+  drafting. Each component is usually evaluated in isolation, against whatever training data was
+  available at the time — and when that data is synthetic, a specific failure mode emerges that this
+  paper documents concretely: near-perfect offline metrics that do not indicate generalizable model
+  competence, but rather trivial separability introduced by the data-generation process itself.</p>
+  <p>This paper documents that failure mode as it occurred during development of OmniFeedback AI,
+  the concrete diagnostic process used to identify it, and the two fixes applied — a hardened data
+  generator and a corrected cluster-count selection method — together with the resulting, more modest
+  but credible metrics. Unlike a purely retrospective case study, both the "before" (V1) and "after" (V2)
+  configurations are preserved and independently re-runnable in the shipped system, allowing a reader to
+  reproduce the comparison rather than take the paper's word for it.</p>
+
+  <h2>2. Related Work</h2>
+  <p>Bidirectional LSTMs <span class="dim">[Schuster &amp; Paliwal, 1997; Hochreiter &amp; Schmidhuber,
+  1997]</span> remain a strong, low-resource-friendly baseline for sequence regression tasks relative to
+  transformer fine-tuning. K-Means cluster-count selection commonly relies on the silhouette coefficient
+  <span class="dim">[Rousseeuw, 1987]</span> or inertia-based elbow inspection; the Kneedle algorithm
+  <span class="dim">[Satopaa et al., 2011]</span> formalizes elbow detection as the point of maximum
+  distance from the chord connecting a curve's endpoints, and we apply it here to a metric where "higher
+  is better" (silhouette) rather than its original "lower is better" (cost/inertia) framing. Named entity
+  recognition and abstractive summarization use pretrained BERT <span class="dim">[Devlin et al.,
+  2019]</span> and BART <span class="dim">[Lewis et al., 2020]</span> respectively. The generative
+  copilot component draws on chain-of-thought prompting <span class="dim">[Wei et al., 2022]</span> and
+  few-shot in-context learning <span class="dim">[Brown et al., 2020]</span>. Optimization throughout
+  uses Adam <span class="dim">[Kingma &amp; Ba, 2015]</span>.</p>
+
+  <h2>3. System Architecture</h2>
+  <p>Raw feedback text is cleaned by a regular-expression-based ingestor (HTML/URL/mention stripping,
+  repeated-character collapsing, hashtag-word retention) and loaded into a SQLite star schema
+  (<span class="mono">Fact_Feedback</span> plus <span class="mono">Dim_User</span>,
+  <span class="mono">Dim_Channel</span>, <span class="mono">Dim_Product</span>) under explicit
+  transaction boundaries with foreign-key and check constraints enforced at the database level. Three
+  parallel modeling paths consume the cleaned corpus: (a) TF-IDF vectorization feeding K-Means clustering
+  and Logistic Regression / Random Forest baseline classifiers, (b) a custom PyTorch BiLSTM continuous
+  urgency regressor, and (c) HuggingFace BERT-NER and BART-summarization pipelines invoked on demand. A
+  prompt-engineered generative copilot consumes the BiLSTM's urgency output and drafts a structured
+  JSON resolution (root cause, risk level, recommended action, customer-facing reply), with a pluggable
+  backend that falls back to a deterministic rule-based generator when no LLM API credential is
+  configured, guaranteeing schema-valid output in both cases.</p>
+
+  <h2>4. Methodology</h2>
+  <h3>4.1 Data: two generator variants</h3>
+  <p><strong>V1 (naive)</strong> reproduces a common quick-prototype pattern: a small fixed list of
+  verbatim phrases (5 negative, 4 positive) sampled uniformly at a flat 40% negative rate, yielding
+  exactly 9 unique training sentences across 4,000 records. <strong>V2 (hardened)</strong> composes
+  sentences from parameterized templates with randomized fill-words (212 unique surface forms across the
+  same 4,000 records), adds a fourth "ambiguous" template class whose target urgency score is sampled to
+  deliberately straddle the 0.5 escalation threshold, and applies label noise (label and score jointly
+  flipped) to approximately 3% of records to simulate annotator disagreement. Both variants otherwise
+  share identical downstream code — the same ingestion, database schema, training scripts, and
+  evaluation methodology — so any metric difference is attributable to the data construction alone.</p>
+
+  <h3>4.2 Cluster-count selection</h3>
+  <p>An initial pass selected K by <span class="mono">argmax</span> over silhouette scores swept across
+  <span class="mono">k ∈ [2, 12]</span>. On V1, this scored <span class="mono">silhouette = 1.000</span>
+  for every <span class="mono">k ≥ 9</span> — the point at which cluster count reaches the corpus's true
+  number of unique strings, at which point each cluster contains only exact duplicates and the metric is
+  saturated rather than informative. Because this curve does not plateau below the search boundary, a
+  naive argmax silently selects whatever the largest tested <span class="mono">k</span> happens to be.
+  We replaced this with a Kneedle-style procedure: normalize both axes to <span class="mono">[0,1]</span>,
+  and select the <span class="mono">k</span> with maximum perpendicular distance from the chord
+  connecting the first and last sampled points — a method that degrades gracefully on both the
+  degenerate V1 curve and the smoothly diminishing-returns V2 curve.</p>
+
+  <h3>4.3 BiLSTM training protocol</h3>
+  <p>A single fixed-seed split (70% train / 15% validation / 15% test) is drawn once before any model
+  sees the data. The regressor (embedding dim 128 → bidirectional LSTM, 64 units/direction → dropout
+  p=0.3 → linear + sigmoid) is trained with Adam (weight decay 1e-5) under MSE loss with early stopping
+  on validation MSE (patience=4). All reported metrics are computed on the held-out test split only.</p>
+
+  <h2>5. Results</h2>
+  <table>
+    <caption>Table 1 — V1 (naive) vs. V2 (hardened), identical pipeline code, different training data.</caption>
+    <thead><tr><th>Metric</th><th class="num">V1 Naive</th><th class="num">V2 Hardened</th></tr></thead>
+    <tbody>
+      <tr><td>Unique training sentences</td><td class="num">9</td><td class="num">212</td></tr>
+      <tr><td>K-Means silhouette at selected k (k=9 both)</td><td class="num">1.000</td><td class="num">0.328</td></tr>
+      <tr><td>Baseline classifier macro-F1 (LogReg)</td><td class="num">1.000</td><td class="num">0.914</td></tr>
+      <tr><td>BiLSTM test MSE</td><td class="num">0.0137</td><td class="num">0.0162</td></tr>
+      <tr><td>BiLSTM test macro-F1 (@0.5 threshold)</td><td class="num">1.000</td><td class="num">0.821</td></tr>
+      <tr><td>Early-stopping epoch</td><td class="num">6</td><td class="num">6</td></tr>
+    </tbody>
+  </table>
+  <p>On V2, a post-hoc threshold sweep (macro-F1 evaluated at 181 candidate thresholds from 0.05–0.95)
+  found an optimum at <span class="mono">t=0.48</span> (F1=0.8285) versus <span class="mono">t=0.5</span>
+  (F1=0.8260) — a 0.3-point gain, indicating the default threshold was already near-optimal rather than
+  leaving material accuracy unclaimed. Predicted-vs-ground-truth urgency correlation on V2 was
+  <span class="mono">r=0.869</span>. A chi-squared test of independence between channel and a
+  three-level urgency bucket returned <span class="mono">χ²=4.18, p=0.840</span> (8 d.f.) — no
+  significant association, traced in Section 6 to the generator's independent metadata assignment
+  rather than a modeling failure.</p>
+
+  <h2>6. Discussion</h2>
+  <p><strong>Error composition, not just error rate.</strong> Manual review of V2's misclassifications
+  shows false negatives concentrated almost entirely in the deliberately-ambiguous template class
+  (target urgency 0.35–0.6, straddling the decision boundary by construction) rather than distributed
+  across obviously-urgent text — i.e., the model is landing on the wrong side of an intentionally hard
+  boundary, not failing to comprehend clear signal. At least one false positive was traced directly to
+  the label-noise injection: a canonically critical-template sentence ("System latency is terrible after
+  the server migration, nothing works.") carried a corrupted low ground-truth label, meaning the model's
+  prediction was semantically correct against a deliberately noised target. This distinction — model
+  error versus dataset-construction artifact — is only recoverable because the noise-injection process
+  was logged and auditable, which we recommend as standard practice whenever label noise is
+  intentionally introduced for robustness testing.</p>
+  <p><strong>A metric-selection pitfall, caught by the numbers not making sense.</strong> An initial
+  post-hoc threshold-optimization pass optimized sklearn's <span class="mono">precision_recall_curve</span>
+  output, which tracks positive-class F1 only; comparing that value against the macro-F1 used everywhere
+  else in the pipeline produced a nominal "best" threshold that scored <em>worse</em> than the existing
+  default — a direct contradiction, since a true optimum cannot underperform a candidate already inside
+  its search space under the same metric. Re-deriving the sweep against macro-F1 directly resolved the
+  contradiction. We surface this as a caution: threshold or hyperparameter "optimization" against a
+  metric silently different from the one used for reporting is a plausible, easy-to-miss error whose
+  only reliable tell is a result that doesn't add up.</p>
+  <p><strong>Independence as a limitation, not a null result to explain away.</strong> The non-significant
+  channel/urgency association is not evidence that channel is generally uninformative for urgency
+  prediction — it is evidence that this generator assigns channel independently of content by
+  construction. We flag this distinction explicitly because a plausible failure mode in applied ML
+  reporting is treating a synthetic dataset's design choices as findings about the world.</p>
+
+  <h2>7. Limitations</h2>
+  <p>All quantitative results in this paper concern synthetic, template-generated text; while V2's
+  design specifically targets known synthetic-data failure modes (verbatim repetition, absent boundary
+  ambiguity, noiseless labels), it remains a simplification of real multi-channel enterprise feedback.
+  Real Yelp and Sentiment140 samples were retrieved and validated as loadable during this project but not
+  yet run through the full training/evaluation methodology described here — the natural next step to
+  test whether the V2-vs-V1 pattern (and the Kneedle fix's necessity) replicates on genuinely
+  human-authored text rather than templated synthetic text. The GenAI copilot's local fallback backend is
+  intentionally rule-based rather than learned, and its output quality was not evaluated against the
+  optional Claude-backed path in this paper.</p>
+
+  <h2>8. Conclusion</h2>
+  <p>We documented a complete diagnostic cycle — suspiciously perfect initial metrics, root-cause
+  identification (verbatim-phrase data construction), and two concrete, independently verifiable fixes
+  (a hardened generator and a Kneedle-based elbow method) — inside a working, deployed multi-model
+  feedback-triage system. Both the "before" and "after" configurations remain live in the shipped
+  application specifically so the comparison in Table 1 is reproducible by a reader rather than merely
+  asserted by the authors.</p>
+
+  <h2>References</h2>
+  <ol class="refs">
+    <li>Schuster, M., &amp; Paliwal, K. K. (1997). Bidirectional recurrent neural networks. <em>IEEE Transactions on Signal Processing</em>, 45(11).</li>
+    <li>Hochreiter, S., &amp; Schmidhuber, J. (1997). Long short-term memory. <em>Neural Computation</em>, 9(8).</li>
+    <li>Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the interpretation and validation of cluster analysis. <em>Journal of Computational and Applied Mathematics</em>, 20.</li>
+    <li>Satopaa, V., Albrecht, J., Irwin, D., &amp; Raghavan, B. (2011). Finding a "kneedle" in a haystack: Detecting knee points in system behavior. <em>ICDCS Workshops</em>.</li>
+    <li>Devlin, J., Chang, M. W., Lee, K., &amp; Toutanova, K. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. <em>NAACL-HLT</em>.</li>
+    <li>Lewis, M., Liu, Y., Goyal, N., et al. (2020). BART: Denoising sequence-to-sequence pre-training for natural language generation, translation, and comprehension. <em>ACL</em>.</li>
+    <li>Wei, J., Wang, X., Schuurmans, D., et al. (2022). Chain-of-thought prompting elicits reasoning in large language models. <em>NeurIPS</em>.</li>
+    <li>Brown, T., Mann, B., Ryder, N., et al. (2020). Language models are few-shot learners. <em>NeurIPS</em>.</li>
+    <li>Kingma, D. P., &amp; Ba, J. (2015). Adam: A method for stochastic optimization. <em>ICLR</em>.</li>
+  </ol>
+
+  <div class="callout sans" style="font-family:'IBM Plex Sans',sans-serif;">Full reproducibility: source code, both dataset variants,
+  trained artifacts, and the exact scripts used to produce every number in Table 1 are at
+  <a href="https://github.com/achellesheel/omnifeedback-ai">github.com/achellesheel/omnifeedback-ai</a>.</div>
+
+  <footer>
+    <span>Draft — feedback welcome</span>
+    <span><a href="../">← Project hub</a></span>
+  </footer>
+</div>
+</body>
+</html>

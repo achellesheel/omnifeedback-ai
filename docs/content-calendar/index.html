@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OmniFeedback AI — 21-Day Content Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f4ef; --surface:#ffffff; --surface-2:#edeae1; --border:#dcd7c8;
+    --text:#1b2030; --text-dim:#5b6478;
+    --accent:#c97c1b; --accent-ink:#ffffff; --accent-2:#1e8f82; --good:#2e7d53; --critical:#c4433f;
+    --shadow: 0 1px 2px rgba(27,32,48,.06), 0 8px 24px rgba(27,32,48,.06);
+    --card-bg: #1b2030; --card-text:#f4f1e8;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10141f; --surface:#171c2b; --surface-2:#1f2537; --border:#2b3348;
+      --text:#e7eaf3; --text-dim:#99a2bc;
+      --accent:#f2a93b; --accent-ink:#10141f; --accent-2:#4fd1c5; --good:#56c08a; --critical:#e2635f;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+      --card-bg:#0c0f18; --card-text:#f4f1e8;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10141f; --surface:#171c2b; --surface-2:#1f2537; --border:#2b3348;
+    --text:#e7eaf3; --text-dim:#99a2bc;
+    --accent:#f2a93b; --accent-ink:#10141f; --accent-2:#4fd1c5; --good:#56c08a; --critical:#e2635f;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+    --card-bg:#0c0f18; --card-text:#f4f1e8;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:"IBM Plex Sans",system-ui,sans-serif; overflow:hidden;}
+  .mono{font-family:"IBM Plex Mono",monospace;}
+
+  #deck{position:relative; width:100%; height:100dvh; overflow:hidden;}
+  .slide{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    padding:4vh clamp(16px,5vw,60px) 12vh; overflow-y:auto;
+    opacity:0; transform:translateY(14px); transition:opacity .35s ease, transform .35s ease; pointer-events:none;
+  }
+  .slide.active{opacity:1; transform:translateY(0); pointer-events:auto;}
+  .slide-inner{max-width:920px; width:100%; margin:0 auto;}
+
+  .top-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:8px;}
+  .eyebrow::before{content:""; width:14px; height:2px; background:var(--accent);}
+  .day-count{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--text-dim);}
+
+  .content-grid{display:grid; grid-template-columns: 320px 1fr; gap:24px; align-items:start;}
+  @media (max-width:820px){ .content-grid{grid-template-columns:1fr;} }
+
+  /* the screenshot-able visual card */
+  .visual-card{
+    aspect-ratio: 4/5; width:100%; max-width:320px;
+    background:var(--card-bg); color:var(--card-text); border-radius:18px;
+    padding:28px 24px; display:flex; flex-direction:column; justify-content:space-between;
+    box-shadow:var(--shadow); position:relative; overflow:hidden;
+  }
+  .visual-card::before{
+    content:""; position:absolute; top:-40%; right:-30%; width:70%; height:70%;
+    background:radial-gradient(circle, color-mix(in srgb, var(--accent) 35%, transparent), transparent 70%);
+    pointer-events:none;
+  }
+  .visual-card .vc-top{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); position:relative; z-index:1;}
+  .visual-card .vc-headline{font-family:"IBM Plex Serif",Georgia,serif; font-weight:700; font-size:clamp(20px,2.6vw,26px); line-height:1.28; margin:14px 0; text-wrap:balance; position:relative; z-index:1;}
+  .visual-card .vc-sub{font-size:13.5px; color:#c7cadb; line-height:1.5; position:relative; z-index:1;}
+  .visual-card .vc-brand{font-family:"IBM Plex Mono",monospace; font-size:11px; color:#8a8fa3; display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1;}
+  .vc-brand .dot{width:6px; height:6px; border-radius:50%; background:var(--accent); display:inline-block; margin-right:6px;}
+
+  .text-col{display:flex; flex-direction:column; gap:16px;}
+  .post-box{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow);}
+  .post-box .head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .post-box .head .t{font-family:"IBM Plex Mono",monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim);}
+  .post-box p{font-size:14.5px; line-height:1.6; margin:0; white-space:pre-wrap;}
+  .copy-btn{
+    font-family:"IBM Plex Mono",monospace; font-size:11.5px; padding:5px 11px; border-radius:7px;
+    border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer;
+  }
+  .copy-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .copy-btn.copied{border-color:var(--good); color:var(--good);}
+
+  #navbar{
+    position:absolute; left:0; right:0; bottom:0; height:64px;
+    display:flex; align-items:center; justify-content:center; gap:18px;
+    background:linear-gradient(to top, var(--bg) 55%, transparent); z-index:10;
+  }
+  .nav-btn{width:38px; height:38px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px;}
+  .nav-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .nav-btn:disabled{opacity:.35; cursor:default;}
+  #counter{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--text-dim); min-width:56px; text-align:center;}
+  #daylabel{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<div id="deck"></div>
+<div id="navbar">
+  <button class="nav-btn" id="prevBtn" aria-label="Previous day">‹</button>
+  <span id="daylabel"></span>
+  <span id="counter" class="mono">1 / 21</span>
+  <button class="nav-btn" id="nextBtn" aria-label="Next day">›</button>
+</div>
+
+<script>
+var DAYS = [
+{h:"I built an AI system that catches its own overfitting.", s:"Live. In the app. Not in a slide.",
+ li:"For the last few weeks I've been building OmniFeedback AI — an enterprise feedback-triage platform that ingests multi-channel customer feedback, scores urgency with a custom PyTorch model, and drafts resolutions with a GenAI copilot. But the part I'm proudest of isn't a feature. It's a bug I found in my own project — and how I fixed it, live, in the shipped app. Over the next 21 days I'm going to walk through the whole build: the architecture, the algorithms, the bugs, and the honest metrics. Starting today.",
+ tw:"Spent weeks building an AI feedback-triage system. Found a bug in my own metrics. Instead of hiding it, I built a live toggle into the app so anyone can see it happen. 21 days of build-in-public starts now. 🧵👇"},
+
+{h:"Feedback arrives everywhere. Crises hide in the noise.", s:"Tickets. Tweets. Reviews. Call notes. None of them talk to each other.",
+ li:"Here's the problem OmniFeedback AI solves: a payment outage happens at 2am. It shows up as a spike in App Store reviews, angry tweets, and support tickets — three channels that don't share data, and that no one is watching all at once. Manual triage across channels like this takes hours. By the time a human notices the pattern, the damage is done. That's the gap I set out to close: a system that scores urgency the moment feedback arrives, across every channel, in under a second.",
+ tw:"A 2am outage shows up as angry tweets, 1-star reviews, and support tickets — three channels, no one watching all of them at once. That's the gap OmniFeedback AI closes. Urgency scored the moment feedback arrives, in well under 350ms."},
+
+{h:"“F1 = 1.0” is not a flex.", s:"It's usually a red flag.",
+ li:"Something I don't see talked about enough: a perfect metric on a portfolio project is usually a sign something's wrong, not a sign of mastery. When I first trained OmniFeedback AI's models, I got a classifier F1 score of 1.000 and a clustering silhouette score of 1.000. My first reaction wasn't excitement — it was suspicion. Real-world text is messy. A model that scores perfectly on it almost always means the data was too easy, not that the model is brilliant. So I went looking for why. That investigation is what the next few days are about.",
+ tw:"Got a perfect F1 score of 1.000 on my first training run. Did NOT celebrate. Real text is messy — a perfect score almost always means the data is too easy, not that your model is great. Here's what I found when I went looking. 🧵"},
+
+{h:"V1: silhouette 1.000. V2: silhouette 0.328.", s:"Same code. Same pipeline. Only the training data changed.",
+ li:"Here's the twist I've been building toward: OmniFeedback AI now ships with two versions of itself, side by side, in the live app. V1 is the naive version — the one that scored a 'perfect' 1.000. V2 is the hardened version I rebuilt after investigating why V1 looked too good to be true. Both run through identical code. You can toggle between them in the app and watch every chart, every metric, every cluster change in real time. I think this is a more honest way to present ML work than a single cherry-picked results table — you don't have to trust my claim, you can go verify it yourself.",
+ tw:"The app now has a toggle: V1 (naive, 'perfect' scores) vs V2 (hardened, honest scores). Same code, different data. Flip the switch and watch the metrics change live. This is how I wish more ML demos worked."},
+
+{h:"Six stages. One warehouse at the center.", s:"Ingestion → Clustering + BiLSTM + NER/Summarization → GenAI Copilot → Dashboard",
+ li:"Quick architecture tour of OmniFeedback AI: raw feedback gets cleaned by a regex-based ingestor, then lands in a SQL star schema warehouse. From there, three things happen in parallel — TF-IDF/K-Means clustering surfaces themes, a custom PyTorch BiLSTM scores urgency, and BERT/BART handle entity extraction and summarization. Everything feeds into a GenAI copilot that drafts resolutions, all wrapped in a Streamlit dashboard. Nothing exotic — just each piece done carefully and tested, rather than duct-taped together.",
+ tw:"Architecture of OmniFeedback AI in one line: Regex cleaning → SQL star schema → (K-Means clustering + PyTorch BiLSTM + BERT/BART) → GenAI copilot → dashboard. Nothing exotic. Just done carefully."},
+
+{h:"BEGIN → validate → INSERT × N → COMMIT", s:"Real ACID transactions. Rollback-tested, not just claimed.",
+ li:"A detail I actually care about: OmniFeedback AI's database layer isn't just 'a CSV in SQLite.' It's a real star schema — a Fact_Feedback table with foreign keys into Dim_User, Dim_Channel, and Dim_Product — and every batch insert runs inside one transaction with a CHECK constraint on urgency_score. I wrote a test that deliberately inserts a batch with one invalid row and confirms the ENTIRE batch rolls back — nothing partially committed. Small detail, but it's the difference between a script and a system.",
+ tw:"Wrote a test that deliberately breaks one row in a 5-row insert batch — confirms the WHOLE batch rolls back, nothing partial. Small thing. But it's the difference between a script and a real data system."},
+
+{h:"TF-IDF → K-Means → auto-discovered themes", s:"No hand-labeling required.",
+ li:"One of the classical ML pieces in OmniFeedback AI: TF-IDF vectorization feeding K-Means clustering, to automatically group feedback into themes like 'billing,' 'app crashes,' or 'shipping delays' — without anyone hand-labeling a single record. The interesting engineering question isn't 'can K-Means cluster text' (it can) — it's 'how do you pick K without cheating yourself.' That turned out to be a genuinely tricky problem, and next up I'll show you the bug I found in my own approach to it.",
+ tw:"TF-IDF + K-Means auto-discovers feedback themes with zero hand-labeling. The hard part isn't clustering — it's picking K honestly. Found a real bug in how I was doing that. Next post. 👀"},
+
+{h:"argmax(silhouette) picked k=12.", s:"Every time. Even when it shouldn't have.",
+ li:"Here's a genuinely interesting bug: I was picking K-Means' cluster count by maximizing the silhouette score. Simple, standard approach. Except on my (early, naive) synthetic text, the silhouette score kept climbing as K increased — all the way to the edge of the range I was testing. It turns out that on templated text, more clusters just means tighter groups of near-duplicate sentences — the metric doesn't plateau, so 'pick the highest silhouette' always just picks the largest K you tested. I fixed it with the Kneedle algorithm — finding the point of maximum curvature relative to a straight line across the whole curve — instead of blindly maximizing. Small algorithmic choice, real difference in output.",
+ tw:"Bug I found in my own clustering code: maximizing silhouette score on templated text just picks the LARGEST k you tested, every time — the curve never plateaus. Fixed it with the Kneedle elbow method instead of naive argmax."},
+
+{h:"Embedding → BiLSTM → Dropout → Sigmoid", s:"A custom PyTorch model scoring urgency from 0.0 to 1.0",
+ li:"The core deep learning piece in OmniFeedback AI is a bidirectional LSTM I built in PyTorch from scratch — an embedding layer, a BiLSTM reading text both forward and backward, dropout for regularization, and a sigmoid output squashing everything into a continuous 0–1 urgency score. Nothing fancy compared to a fine-tuned transformer, but it's fast, cheap to run, and — when trained and evaluated properly (more on that next) — genuinely accurate. Sometimes the simpler architecture is the right engineering call.",
+ tw:"Built a custom BiLSTM in PyTorch to score customer feedback urgency 0.0–1.0. Embedding → bidirectional LSTM → dropout → sigmoid. Simple architecture, but trained properly it holds its own. Details next."},
+
+{h:"4 things standing between this model and overfitting", s:"Fixed train/val/test split · Early stopping · Dropout 0.3 · L2 weight decay",
+ li:"How I kept the BiLSTM in OmniFeedback AI from overfitting, concretely: (1) a fixed-seed train/val/test split done once, before the model ever sees data — no peeking, no re-splitting to get a better number; (2) early stopping on validation loss, so training halts the moment the model stops generalizing; (3) dropout at 0.3; (4) L2 weight decay on the optimizer. None of these are novel — they're standard practice. But 'standard practice, actually implemented and verified' is rarer than it should be in portfolio projects, and it's the difference between a number you can trust and a number you can't.",
+ tw:"How I keep my BiLSTM honest: fixed train/val/test split (no peeking), early stopping on val loss, dropout, L2 weight decay. None of this is novel. All of it is easy to skip under time pressure. I didn't skip it."},
+
+{h:"The full reveal.", s:"V1: F1 1.000 / MSE 0.0137 — V2: F1 0.821 / MSE 0.0162",
+ li:"Here's the full before/after comparison I've been building up to. V1 (naive training data): classifier F1 1.000, clustering silhouette 1.000, BiLSTM F1 1.000. V2 (hardened training data, same code): classifier F1 0.914, silhouette 0.328, BiLSTM F1 0.821. V2's numbers are lower. They're also the ones I trust — because I know exactly why they're lower: 212 unique training sentences instead of 9, deliberately ambiguous cases, and simulated label noise. Both versions are live in the app right now — you can flip between them and see this exact comparison yourself, with the actual charts, not just a screenshot.",
+ tw:"The full reveal: V1 scored F1=1.000 everywhere. V2 (harder, more honest data) scores 0.914 / 0.328 / 0.821. Lower numbers. Higher trust. Both versions are live in the app — go flip the switch yourself."},
+
+{h:"Why a ‘perfect’ score is the red flag, not the win", s:"It means the model memorized 9 sentences. Not that it understood language.",
+ li:"I want to spell out exactly why V1's perfect scores are bad news, not good news. V1's entire training set was built from 9 unique phrases repeated across 4,000 rows. A model — or even a simple clustering algorithm — can trivially get a perfect score by matching on exact wording. That's memorization, not understanding. The moment you show it a sentence it hasn't seen verbatim, it has no idea what to do. V2 forces the model to generalize across 212 distinct phrasings, genuinely ambiguous cases, and noisy labels — which is why its scores are lower AND more meaningful. I think this distinction — between a high score and a trustworthy score — is one of the most under-discussed ideas in applied ML.",
+ tw:"A model can score 'perfectly' by memorizing 9 sentences. That's not intelligence, it's a party trick. The distinction between a HIGH score and a TRUSTWORTHY score is one of the most under-discussed ideas in ML. My project makes it visible, on purpose."},
+
+{h:"iPhone 15 · MISC · 0.99", s:"BERT correctly extracted 4/4 real entities from one sentence",
+ li:"Tested OmniFeedback AI's entity extraction (BERT NER) on a realistic support message: 'The iPhone 15 crashed after the iOS 17.2 update, and Apple support in California hasn't responded.' It correctly pulled out iPhone 15, iOS 17.2, Apple, and California — all with 94%+ confidence. This is the kind of feature that sounds simple in a spec document and is genuinely satisfying to see work correctly on a sentence I wrote myself, not a cherry-picked example from a paper.",
+ tw:"Ran a real test sentence through BERT NER: 'The iPhone 15 crashed after the iOS 17.2 update, and Apple support in California hasn't responded.' Correctly extracted all 4 entities, 94%+ confidence each. Small thing. Satisfying to watch work."},
+
+{h:"5 crisis reports → 1 executive brief", s:"BART summarization, live-tested, not just imported",
+ li:"Executive summarization is one of those features that's easy to wire up and easy to never actually test. I fed OmniFeedback AI's BART summarizer 5 distinct crisis reports — a crash, a billing double-charge, a damaged shipment, an outage, a latency spike — and it condensed them into one coherent brief in about 5 seconds. The point isn't that BART is impressive (it is, but that's not new information). The point is that I actually ran it, on real output, instead of assuming the HuggingFace pipeline call would just work.",
+ tw:"Fed 5 different crisis reports into BART. Got one coherent executive summary back in ~5 seconds. I actually ran this test instead of assuming pipeline('summarization') would just work — and I'm glad I did, because it took two bug fixes to get clean output."},
+
+{h:"Chain-of-Thought + few-shot → structured JSON", s:"root_cause, risk_level, recommended_action, customer_reply_draft",
+ li:"The GenAI copilot in OmniFeedback AI doesn't just call an LLM and hope for good output — it uses a system prompt built around Chain-of-Thought reasoning and a couple of few-shot examples, and enforces a strict JSON schema on the response (root cause, risk level, recommended action, and a draft customer reply). If the model's output doesn't parse as valid JSON, there's a fallback. The goal was 100% schema-valid output, every time — because a copilot that occasionally returns broken JSON is worse than no copilot at all in a real support workflow.",
+ tw:"GenAI copilot design: Chain-of-Thought system prompt + few-shot examples + strict JSON schema enforcement + a fallback if parsing fails. Goal: 100% valid JSON, every time. A copilot that sometimes breaks is worse than no copilot."},
+
+{h:"No API key? Still works.", s:"Zero-cost local backend, transparent upgrade to Claude when you add a key",
+ li:"A design decision I'm genuinely proud of: OmniFeedback AI's GenAI copilot works with zero configuration and zero API cost — it falls back to a deterministic, rule-based response generator when no LLM API key is present. Add an ANTHROPIC_API_KEY to the app's secrets, and it automatically upgrades to Claude for materially better responses — no code change required. This matters because a public demo that crashes the moment someone forgets to configure a secret is a bad first impression, and a real enterprise pilot shouldn't have to pay per-token costs before anyone's decided the product is worth it.",
+ tw:"Public AI demos that crash because a secret wasn't configured are a bad look. So OmniFeedback AI's copilot has a free, zero-config fallback by default — and auto-upgrades to Claude the moment you add an API key. No code change needed."},
+
+{h:"0.5 vs 0.48", s:"Swept 181 thresholds. Found a 0.3-point gain. That's a good sign.",
+ li:"Ran a threshold-sensitivity analysis on the urgency model: swept 181 candidate cutoffs between 0.05 and 0.95, looking for the F1-optimal decision threshold. Found it at 0.48 — barely left of the default 0.5 — for a 0.3-point F1 improvement. That tiny gap is actually a good result: it means the 'obvious' threshold I shipped with wasn't leaving meaningful accuracy on the table. Side note: my first attempt at this analysis had a bug — I was comparing two different F1 definitions and got a nonsensical result where the 'optimal' threshold scored worse than the default. Caught it because the numbers didn't add up, not because I was looking for it.",
+ tw:"Swept 181 thresholds looking for the optimal urgency cutoff. Found it at 0.48 vs the default 0.5 — only a 0.3pt F1 gain. That's actually good news: the obvious default wasn't leaving accuracy on the table. (First attempt had a bug — numbers didn't add up, caught it, fixed it.)"},
+
+{h:"χ² = 4.18, p = 0.840", s:"Channel and urgency are NOT statistically associated. Here's why — and it's not good news.",
+ li:"Not every finding in a project makes the product look better, and I think that's worth posting about too. I ran a chi-squared test on OmniFeedback AI's synthetic data to check whether feedback channel (Twitter, email, app, etc.) is associated with urgency level. Result: p=0.840 — no significant association. Digging in, I found the actual cause: my synthetic data generator assigns channel randomly, independent of the feedback content. In the real world, channel almost certainly would carry signal (public Twitter complaints skew toward visible outages, for instance) — but my synthetic generator doesn't model that yet. I'd rather document that limitation plainly than let a clean chi-squared page imply a finding that isn't really there.",
+ tw:"Ran a chi-squared test expecting to find channel affects urgency. Got p=0.840 — nothing. Turned out my synthetic data generator assigns channel randomly, independent of content. Documenting the limitation honestly instead of hiding a null result."},
+
+{h:"It worked locally. It broke on deploy. Twice.", s:"A missing curl binary. A Python 3.14 vs torch mismatch.",
+ li:"Two deployment bugs worth sharing because they're both the kind that 'works on my machine' never catches. First: my Docker HEALTHCHECK used curl, but the slim base image doesn't ship curl — so the healthcheck silently failed forever, and Docker never complains about this at build time, only at runtime. Second: my first Streamlit Cloud deploy failed because the platform defaulted to Python 3.14, and my pinned PyTorch version has zero compatible wheels for it. Fixed by explicitly setting Python 3.11 in the platform's Advanced Settings. Neither bug showed up until I actually ran the thing in its real target environment — which is exactly why I did that, instead of stopping at 'the code builds.'",
+ tw:"Two deploy bugs 'works on my machine' would never catch: (1) Docker healthcheck used curl, but the slim image doesn't have curl — silent failure forever. (2) Streamlit Cloud defaulted to Python 3.14, zero torch wheels available. Both only showed up by actually running it live."},
+
+{h:"3 user journeys. 9 QA findings. 1 honest recommendation.", s:"Support manager. Product manager. Skeptical technical reviewer.",
+ li:"Before calling OmniFeedback AI 'done,' I ran it through a QA/PM-style review — mapping out three real user journeys (a support manager triaging a ticket, a PM reviewing weekly trends, a skeptical technical reviewer checking my claims), and logging 9 concrete findings ranked by severity, with an honest 'fixed vs. still open' status on each. My recommendation to a hypothetical stakeholder includes two caveats I'd want to hear before deploying this myself: the clustering findings are currently capped by a synthetic-data limitation, and the free GenAI backend is intentionally simple. I'd rather a reviewer hear that from me than discover it themselves.",
+ tw:"Ran my own project through a QA/PM review: 3 user journeys, 9 ranked findings, honest fixed-vs-open status on each. Including the caveats that make the product look less perfect. I'd rather say it first than have someone else find it."},
+
+{h:"That's the build. Now go see it yourself.", s:"Live app · GitHub · 15-slide deck · Data insights · Research paper",
+ li:"That's 21 days of building OmniFeedback AI in public — from a suspicious 'perfect' F1 score, through the bug hunt, to a shipped app where you can toggle between the naive and hardened versions and watch the metrics change live. Everything is public: the live Streamlit app, the full GitHub repo with 25 passing tests, a 15-slide technical deck, a full data-insights writeup, a QA/product review, and a working paper documenting the whole methodology. If you build things and have ever shipped a 'perfect' metric you didn't fully trust — I'd love to hear about it. Links in the comments. Thanks for following along.",
+ tw:"That's a wrap on 21 days of building OmniFeedback AI in public. Live app, full GitHub repo, slide deck, data insights, and a working paper — all public, all link in bio. If you've ever shipped a 'perfect' metric you didn't quite trust, I want to hear about it. 🙏"}
+];
+
+(function(){
+  var deck = document.getElementById('deck');
+  var total = DAYS.length;
+  var idx = 0;
+
+  DAYS.forEach(function(d, i){
+    var slide = document.createElement('section');
+    slide.className = 'slide';
+    slide.innerHTML =
+      '<div class="slide-inner">' +
+        '<div class="top-row">' +
+          '<div class="eyebrow">Day ' + (i+1) + ' / ' + total + '</div>' +
+          '<div class="day-count mono">Post ' + (i+1) + ' of ' + total + '</div>' +
+        '</div>' +
+        '<div class="content-grid">' +
+          '<div class="visual-card">' +
+            '<div class="vc-top">OmniFeedback AI · Day ' + (i+1) + '</div>' +
+            '<div class="vc-headline">' + d.h + '</div>' +
+            '<div class="vc-sub">' + d.s + '</div>' +
+            '<div class="vc-brand"><span><span class="dot"></span>github.com/achellesheel/omnifeedback-ai</span></div>' +
+          '</div>' +
+          '<div class="text-col">' +
+            '<div class="post-box">' +
+              '<div class="head"><span class="t">LinkedIn Post</span><button class="copy-btn" data-idx="' + i + '" data-kind="li">Copy</button></div>' +
+              '<p>' + d.li + '</p>' +
+            '</div>' +
+            '<div class="post-box">' +
+              '<div class="head"><span class="t">Tweet</span><button class="copy-btn" data-idx="' + i + '" data-kind="tw">Copy</button></div>' +
+              '<p>' + d.tw + '</p>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    deck.appendChild(slide);
+  });
+
+  var counterEl = document.getElementById('counter');
+  var daylabelEl = document.getElementById('daylabel');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var slides = deck.querySelectorAll('.slide');
+
+  function render(){
+    slides.forEach(function(s,i){ s.classList.toggle('active', i===idx); });
+    counterEl.textContent = (idx+1) + ' / ' + total;
+    daylabelEl.textContent = 'Day ' + (idx+1);
+    prevBtn.disabled = idx===0;
+    nextBtn.disabled = idx===total-1;
+  }
+  function go(n){ idx = Math.max(0, Math.min(total-1, n)); render(); }
+
+  prevBtn.addEventListener('click', function(){ go(idx-1); });
+  nextBtn.addEventListener('click', function(){ go(idx+1); });
+  window.addEventListener('keydown', function(e){
+    if (e.key==='ArrowRight' || e.key===' ') go(idx+1);
+    else if (e.key==='ArrowLeft') go(idx-1);
+  });
+
+  deck.addEventListener('click', function(e){
+    var btn = e.target.closest('.copy-btn');
+    if (!btn) return;
+    var i = parseInt(btn.getAttribute('data-idx'), 10);
+    var kind = btn.getAttribute('data-kind');
+    var text = kind === 'li' ? DAYS[i].li : DAYS[i].tw;
+    function done(){
+      btn.textContent = 'Copied ✓'; btn.classList.add('copied');
+      setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  });
+  function fallbackCopy(text, cb){
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e){}
+    document.body.removeChild(ta);
+    cb();
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

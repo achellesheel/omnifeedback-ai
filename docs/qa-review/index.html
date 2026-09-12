@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OmniFeedback AI — QA & Product Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f4ef; --surface:#ffffff; --surface-2:#edeae1; --border:#dcd7c8;
+    --text:#1b2030; --text-dim:#5b6478;
+    --accent:#c97c1b; --accent-2:#1e8f82; --critical:#c4433f; --good:#2e7d53;
+    --shadow: 0 1px 2px rgba(27,32,48,.06), 0 8px 24px rgba(27,32,48,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10141f; --surface:#171c2b; --surface-2:#1f2537; --border:#2b3348;
+      --text:#e7eaf3; --text-dim:#99a2bc;
+      --accent:#f2a93b; --accent-2:#4fd1c5; --critical:#e2635f; --good:#56c08a;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10141f; --surface:#171c2b; --surface-2:#1f2537; --border:#2b3348;
+    --text:#e7eaf3; --text-dim:#99a2bc;
+    --accent:#f2a93b; --accent-2:#4fd1c5; --critical:#e2635f; --good:#56c08a;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:"IBM Plex Sans",system-ui,sans-serif; padding-block:8vh; padding-inline:20px;}
+  .wrap{max-width:820px; margin:0 auto;}
+  .mono{font-family:"IBM Plex Mono",monospace;}
+  .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:8px; margin-bottom:14px;}
+  .eyebrow::before{content:""; width:16px; height:2px; background:var(--accent);}
+  h1{font-size:clamp(30px,5vw,44px); margin:0 0 14px; text-wrap:balance; letter-spacing:-0.01em;}
+  h2{font-size:clamp(22px,3vw,28px); margin:56px 0 16px; text-wrap:balance;}
+  p{line-height:1.65; margin:0 0 14px;}
+  .lead{color:var(--text-dim); font-size:17px; max-width:66ch;}
+  .dim{color:var(--text-dim);}
+  a{color:var(--accent);}
+
+  .journeys{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:8px;}
+  @media (max-width:760px){ .journeys{grid-template-columns:1fr;} }
+  .j-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; box-shadow:var(--shadow);}
+  .j-card .who{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--accent); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;}
+  .j-card ol{margin:0; padding-left:18px; font-size:13.5px; line-height:1.6;}
+  .j-card ol li{margin-bottom:6px;}
+  .j-card .friction{margin-top:10px; padding:8px 10px; background:var(--surface-2); border-radius:8px; font-size:12.5px; color:var(--text-dim);}
+
+  table{border-collapse:collapse; width:100%; font-size:14px; margin-top:8px;}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim); font-weight:600;}
+  .pill{display:inline-block; padding:2px 10px; border-radius:999px; font-size:11.5px; font-family:"IBM Plex Mono",monospace; white-space:nowrap;}
+  .pill.good{background:color-mix(in srgb, var(--good) 18%, transparent); color:var(--good);}
+  .pill.accent{background:color-mix(in srgb, var(--accent) 18%, transparent); color:var(--accent);}
+  .pill.sev-high{background:color-mix(in srgb, var(--critical) 18%, transparent); color:var(--critical);}
+  .pill.sev-med{background:color-mix(in srgb, var(--accent) 14%, transparent); color:var(--accent);}
+  .pill.sev-low{background:var(--surface-2); color:var(--text-dim);}
+
+  .value-grid{display:grid; grid-template-columns:1fr; gap:14px; margin-top:8px;}
+  .value-row{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow);}
+  .value-row .claim{font-weight:600; font-size:14.5px; margin-bottom:6px;}
+  .value-row .note{font-size:13.5px; color:var(--text-dim);}
+
+  .callout{border-left:3px solid var(--accent); padding:14px 18px; background:var(--surface-2); border-radius:0 10px 10px 0; font-size:15px; margin-top:10px;}
+
+  footer{margin-top:64px; padding-top:24px; border-top:1px solid var(--border); font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--text-dim); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+  footer a{color:var(--text-dim);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">QA &amp; Product Review</div>
+  <h1>End-to-End Flow, QA Findings &amp; Business Justification</h1>
+  <p class="lead">A QA/PM-style walkthrough of OmniFeedback AI as it exists today — written against the
+    actual shipped product, not an aspirational spec. Live at
+    <a href="https://omnifeedback-ai-c4mmclqnkgytms6vuzqtjp.streamlit.app/" target="_blank" rel="noopener">the deployed app</a>.</p>
+
+  <h2>1. End-to-end user journeys</h2>
+  <div class="journeys">
+    <div class="j-card">
+      <div class="who">Support Manager</div>
+      <ol>
+        <li>Pastes a ticket into Inference Playground → urgency score in under a second</li>
+        <li>If HIGH/CRITICAL, moves to GenAI Copilot for root cause + draft reply</li>
+        <li>Sends the reviewed draft, logs the action</li>
+      </ol>
+      <div class="friction">Friction: text doesn't carry over between the two pages yet — queued in the roadmap.</div>
+    </div>
+    <div class="j-card">
+      <div class="who">Product Manager</div>
+      <ol>
+        <li>Checks Executive Overview for critical rate, channel trends, aspect volume</li>
+        <li>Opens Clustering Explorer — elbow chart justifies K, not just asserts it</li>
+        <li>Checks Statistical Tests before trusting any channel-based intuition</li>
+      </ol>
+      <div class="friction">Gap: no exportable report snapshot — screen-share only, for now.</div>
+    </div>
+    <div class="j-card">
+      <div class="who">Technical Reviewer</div>
+      <ol>
+        <li>Opens Model Comparison first — it's page 0</li>
+        <li>Sees V1 hit F1=1.0, sees why that's a red flag, not a win</li>
+        <li>Verifies the claim themselves in under a minute</li>
+      </ol>
+      <div class="friction">This journey is the strongest single feature for a skeptical audience.</div>
+    </div>
+  </div>
+
+  <h2>2. QA findings</h2>
+  <table>
+    <thead><tr><th>Finding</th><th>Severity</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Naive generator made the whole pipeline overfit-prone</td><td><span class="pill sev-high">High</span></td><td><span class="pill good">Fixed</span></td></tr>
+      <tr><td>Naive <span class="mono">argmax(silhouette)</span> picks the range boundary on templated text</td><td><span class="pill sev-med">Medium</span></td><td><span class="pill good">Fixed</span></td></tr>
+      <tr><td>Docker <span class="mono">HEALTHCHECK</span> silently broken (missing curl)</td><td><span class="pill sev-med">Medium</span></td><td><span class="pill good">Fixed</span></td></tr>
+      <tr><td>Streamlit Cloud defaults to a Python version incompatible with pinned torch</td><td><span class="pill sev-high">High</span></td><td><span class="pill good">Fixed</span></td></tr>
+      <tr><td>Channel/aspect carry no real signal — assigned independent of text</td><td><span class="pill sev-med">Medium</span></td><td><span class="pill accent">Open</span></td></tr>
+      <tr><td>Playground and Copilot don't share pasted text</td><td><span class="pill sev-low">Low</span></td><td><span class="pill accent">Open</span></td></tr>
+      <tr><td>No exportable report snapshot for Executive Overview</td><td><span class="pill sev-low">Low</span></td><td><span class="pill accent">Open</span></td></tr>
+      <tr><td>NER/BART cold-start ~95s combined on first use</td><td><span class="pill sev-low">Low</span></td><td><span class="pill accent">Open (UX, not correctness)</span></td></tr>
+      <tr><td>GenAI local backend is keyword-pattern-based, not learned</td><td><span class="pill sev-med">Medium</span></td><td><span class="pill good">By design</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Business value, honestly framed</h2>
+  <div class="value-grid">
+    <div class="value-row">
+      <div class="claim">Crisis detection speed</div>
+      <div class="note">BiLSTM scores a ticket in well under 350ms; catches ~80% of true critical tickets at the deployed 0.5 threshold (real confusion-matrix number, not a marketing claim of near-100%).</div>
+    </div>
+    <div class="value-row">
+      <div class="claim">Clustering for roadmap prioritization</div>
+      <div class="note">Works, but currently capped by the channel/aspect-independence finding above — clusters describe <em>how</em> people phrase feedback, not yet <em>what</em> product area it's about. Worth stating to a prospective client rather than overselling.</div>
+    </div>
+    <div class="value-row">
+      <div class="claim">Executive summarization</div>
+      <div class="note">BART live-tested and confirmed coherent — genuinely condenses a batch of tickets to a short brief, verified rather than assumed.</div>
+    </div>
+    <div class="value-row">
+      <div class="claim">GenAI resolution copilot</div>
+      <div class="note">Zero API cost via the local backend, transparent upgrade to Claude — directly answers the common enterprise objection: "we don't want per-token costs during a pilot."</div>
+    </div>
+  </div>
+
+  <div class="callout">The platform is credible to demo today, with two caveats a presenter should state
+    proactively: (1) clustering/channel findings are currently constrained by synthetic-data design, not
+    model capability, and (2) the GenAI local backend is intentionally simple by design, not a limitation
+    to hide — its value is the zero-cost default and clean upgrade path.</div>
+
+  <footer>
+    <span>github.com/achellesheel/omnifeedback-ai</span>
+    <span><a href="../">← Project hub</a></span>
+  </footer>
+</div>
+</body>
+</html>
