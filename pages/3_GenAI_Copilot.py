@@ -68,6 +68,6 @@ if st.button("Generate Resolution", type="primary"):
         st.write(result["recommended_action"])
     with col2:
         st.subheader("Customer Reply Draft")
-        st.text_area("", value=result["customer_reply_draft"], height=150, disabled=True, label_visibility="collapsed")
+        st.text_area("Customer reply draft", value=result["customer_reply_draft"], height=150, disabled=True, label_visibility="collapsed")
 
     st.json(result)
