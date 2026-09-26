@@ -25,6 +25,7 @@ reasoning behind each modeling choice, written as it happened.
 
 📊 [15-slide technical walkthrough](./docs/slides/index.html) · 📈 [Data insights](./docs/DATA_INSIGHTS.md)
 · 🔍 [Product review](./docs/PRODUCT_REVIEW.md) · 🚀 [Enhancement roadmap](./docs/ENHANCEMENTS.md)
+· 🗺️ [Codebase guide](./docs/CODEBASE_GUIDE.md)
 
 ---
 
